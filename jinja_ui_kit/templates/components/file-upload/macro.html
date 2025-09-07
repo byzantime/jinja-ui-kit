@@ -1,0 +1,158 @@
+{#
+  Renders a configurable file upload component with support for labels, hints, errors, and multiple files.
+
+  @param {object} params - Configuration object for the file upload
+  @param {string} params.name - Name attribute (required)
+  @param {string} [params.id] - ID attribute (defaults to name)
+  @param {object} params.label - Label configuration
+  @param {object} [params.hint] - Hint configuration
+  @param {object} [params.errorMessage] - Error message configuration
+  @param {object} [params.formGroup] - Form group wrapper
+  @param {string} [params.accept] - File types to accept (e.g., "image/*", ".pdf,.doc,.docx")
+  @param {boolean} [params.multiple=false] - Allow multiple file selection
+  @param {boolean} [params.disabled=false] - Disable the input
+  @param {boolean} [params.required=false] - Make the input required
+  @param {string} [params.classes] - Additional CSS classes for the input
+
+  Examples:
+  {% from "jinja_ui_kit/templates/components/file-upload/macro.html" import fileUpload %}
+
+  Basic file upload with label and hint
+  {{ fileUpload({
+    name: "document",
+    label: {
+      text: "Upload document"
+    },
+    hint: {
+      text: "Select a PDF or Word document to upload"
+    },
+    accept: ".pdf,.doc,.docx"
+  }) }}
+
+  Multiple file upload with error
+  {{ fileUpload({
+    "name": "images",
+    "label": {
+      "text": "Upload images"
+    },
+    "accept": "image/*",
+    "multiple": true,
+    "errorMessage": {
+      "text": "Please select at least one valid image file"
+    }
+  }) }}
+#}
+{% macro fileUpload(params) %}
+{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/templates/components/error-message/macro.html" import errorMessage %}
+{% from "jinja_ui_kit/templates/components/hint/macro.html" import hint %}
+{% from "jinja_ui_kit/templates/components/label/macro.html" import label %}
+
+{#- a record of other elements that we need to associate with the input using
+  aria-describedby – for example hints or error messages -#}
+{% set describedBy = params.describedBy if params.describedBy else undefined -%}
+{%- set id = params.id if params.id else params.name -%}
+
+{#- Set classes for this component #}
+{%- set classNames = "w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer" -%}
+
+{%- if params.classes %}
+  {% set classNames = classNames ~ " " ~ params.classes %}
+{% endif %}
+
+{%- if params.errorMessage %}
+  {% set classNames = classNames ~ " border-red-500 focus:ring-red-500" %}
+{% endif %}
+
+{%- if params.disabled %}
+  {% set classNames = classNames ~ " bg-gray-50 text-gray-500 cursor-not-allowed file:bg-gray-100 file:text-gray-500 file:cursor-not-allowed" %}
+{% endif %}
+
+{%- set hasBeforeInput = true if params.formGroup and params.formGroup.beforeInput and (params.formGroup.beforeInput.text or params.formGroup.beforeInput.html) else false %}
+{%- set hasAfterInput = true if params.formGroup and params.formGroup.afterInput and (params.formGroup.afterInput.text or params.formGroup.afterInput.html) else false %}
+
+{%- macro _fileUploadElement(params) -%}
+  <input
+    {{- attributes({
+      'class': classNames,
+      'id': id,
+      'name': params.name,
+      'type': 'file',
+      'accept': {
+        'value': params.accept,
+        'optional': true
+      },
+      'multiple': {
+        'value': params.multiple,
+        'optional': true
+      },
+      'disabled': {
+        'value': params.disabled,
+        'optional': true
+      },
+      'required': {
+        'value': params.required,
+        'optional': true
+      },
+      'autofocus': {
+        'value': params.autofocus,
+        'optional': true
+      },
+      "aria-describedby": {
+        'value': describedBy,
+        'optional': true
+      }
+    }) -}}
+    {{- attributes(params.attributes) }}>
+{%- endmacro -%}
+
+<div class="form-group {%- if params.errorMessage %} form-group--error{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"
+  {{- attributes(params.formGroup.attributes if params.formGroup) }}>
+  {{ label({
+    'html': params.label.html,
+    'text': params.label.text,
+    'classes': params.label.classes,
+    'isPageHeading': params.label.isPageHeading,
+    'attributes': params.label.attributes,
+    'for': id
+  }) | trim | indent(2) }}
+{% if params.hint %}
+  {% set hintId = id ~ '-hint' %}
+  {% set describedBy = describedBy ~ ' ' ~ hintId if describedBy else hintId %}
+  {{ hint({
+    'id': hintId,
+    'classes': params.hint.classes,
+    'attributes': params.hint.attributes,
+    'html': params.hint.html,
+    'text': params.hint.text
+  }) | trim | indent(2) }}
+{% endif %}
+{% if params.errorMessage %}
+  {% set errorId = id ~ '-error' %}
+  {% set describedBy = describedBy ~ ' ' ~ errorId if describedBy else errorId %}
+  {{ errorMessage({
+    'id': errorId,
+    'classes': params.errorMessage.classes,
+    'attributes': params.errorMessage.attributes,
+    'html': params.errorMessage.html,
+    'text': params.errorMessage.text,
+    'visuallyHiddenText': params.errorMessage.visuallyHiddenText
+  }) | trim | indent(2) }}
+{% endif %}
+
+{%- if hasBeforeInput or hasAfterInput %}
+  <div class="file-upload__wrapper {%- if params.fileUploadWrapper and params.fileUploadWrapper.classes %} {{ params.fileUploadWrapper.classes }}{% endif %}"
+    {{- attributes(params.fileUploadWrapper.attributes if params.fileUploadWrapper) }}>
+    {% if hasBeforeInput %}
+      {{- params.formGroup.beforeInput.html | safe | trim | indent(4, true) if params.formGroup and params.formGroup.beforeInput.html else params.formGroup.beforeInput.text }}
+    {% endif %}
+    {{ _fileUploadElement(params) }}
+    {% if hasAfterInput %}
+      {{- params.formGroup.afterInput.html | safe | trim | indent(4, true) if params.formGroup and params.formGroup.afterInput.html else params.formGroup.afterInput.text }}
+    {% endif %}
+  </div>
+{% else %}
+  {{ _fileUploadElement(params) }}
+{% endif %}
+</div>
+{% endmacro %}

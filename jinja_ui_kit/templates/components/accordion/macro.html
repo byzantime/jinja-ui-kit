@@ -1,0 +1,78 @@
+{#
+  Renders a collapsible accordion component with configurable sections and default states.
+
+  @param {object} params - Configuration object for the accordion
+  @param {array} params.sections - Array of section objects (required)
+  @param {string} params.sections[].title - Section title text (required)
+  @param {string} params.sections[].content - Section content HTML (required)
+  @param {boolean} [params.sections[].default_open] - Whether this section should be open by default
+  @param {string} [params.id_prefix='accordion'] - Prefix for HTML IDs
+  @param {boolean|number} [params.default_open=false] - Global default open state (boolean for all, number for specific index)
+  @param {boolean} [params.compact=false] - Use compact styling with less padding
+  @param {string} [params.classes] - Additional CSS classes for the accordion wrapper
+  @param {object} [params.attributes] - Additional HTML attributes for the accordion wrapper
+
+  Examples:
+  {% from "jinja_ui_kit/templates/components/accordion/macro.html" import accordion %}
+
+  Basic accordion with mixed default states:
+  {{ accordion({
+    "sections": [
+      {"title": "Section 1", "content": "<p>Content 1</p>", "default_open": true},
+      {"title": "Section 2", "content": "<p>Content 2</p>", "default_open": false},
+      {"title": "Section 3", "content": "<p>Content 3</p>"}
+    ],
+    "id_prefix": "my-accordion",
+    "compact": true
+  }) }}
+#}
+
+{% macro accordion(params) %}
+{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes %}
+
+{% set sections = params.sections %}
+{% set id_prefix = params.id_prefix or 'accordion' %}
+{% set default_open = params.default_open if params.default_open is defined else False %}
+{% set compact = params.compact or False %}
+{% set classes = params.classes or '' %}
+{% set wrapper_attributes = params.attributes or {} %}
+<div class="w-full space-y-1{{ ' ' ~ classes if classes else '' }}"
+  {{- attributes(wrapper_attributes) }}>
+ {% for section in sections %}
+   {% set section_id = id_prefix ~ '-' ~ loop.index %}
+   {% set content_id = section_id ~ '-content' %}
+   {#- Check per-section default_open first, then fall back to global default_open -#}
+   {% set section_default = section.default_open if section.default_open is defined else none %}
+   {% if section_default is not none %}
+     {% set is_open = section_default %}
+   {% else %}
+     {% set is_open = default_open is sameas true or (default_open is not sameas false and loop.index0 == default_open) %}
+   {% endif %}
+
+   <div class="overflow-hidden border border-gray-200 rounded-lg">
+     <button
+       id="{{ section_id }}-header"
+       class="flex items-center justify-between w-full {{ 'py-2 px-3' if compact else 'p-4' }} font-medium text-left bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-300"
+       aria-expanded="{{ 'true' if is_open else 'false' }}"
+       aria-controls="{{ content_id }}"
+       _="on click or toggle_accordion
+           toggle @aria-expanded
+           toggle .hidden on #{{ content_id }}
+           toggle .rotate-180 on .transform in me
+       ">
+       <span class="text-sm">{{ section['title'] }}</span>
+       <svg class="w-4 h-4 transform transition-transform duration-200 {{ 'rotate-180' if is_open else '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+       </svg>
+     </button>
+
+     <div
+       id="{{ content_id }}"
+       class="bg-white {{ 'py-2 px-3' if compact else 'p-4' }} {{ 'hidden' if not is_open else '' }}"
+       aria-labelledby="{{ section_id }}-header">
+       {{ section['content'] }}
+     </div>
+   </div>
+ {% endfor %}
+</div>
+{% endmacro %}

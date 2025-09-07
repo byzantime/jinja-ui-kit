@@ -1,0 +1,62 @@
+{#
+  Renders an error summary component for displaying form validation errors.
+
+  Parameters:
+    - params.titleHtml (string|optional): HTML for the error summary title
+    - params.titleText (string|optional): Plain text for the error summary title
+    - params.classes (string|optional): Additional CSS classes to apply
+    - params.disableAutoFocus (bool|optional): Disables auto-focus behavior
+    - params.attributes (object|optional): HTML attributes for the container
+    - params.descriptionHtml (string|optional): HTML description text
+    - params.descriptionText (string|optional): Plain text description
+    - params.errorList (array|optional): List of error items with:
+      - href (string|optional): Link target for the error
+      - html (string|optional): HTML error text
+      - text (string|optional): Plain error text
+      - attributes (object|optional): HTML attributes for the error link
+
+  Notes:
+    - Either titleHtml or titleText must be provided
+    - If caller content is provided, it will be used as the description
+    - Error items can be either links (with href) or plain text
+    - Includes accessibility features like role="alert" for screen readers
+#}
+{% macro errorSummary(params) %}
+{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes -%}
+
+<div class="border-l-4 border-red-500 bg-red-50 p-4 mb-6
+  {%- if params.classes %} {{ params.classes }}{% endif %}"
+  {%- if params.disableAutoFocus is not undefined %} data-disable-auto-focus="{{ params.disableAutoFocus | lower }}"{% endif %}
+  {{- attributes(params.attributes) }} data-module="error-summary">
+  {#- Keep the role="alert" in a seperate child container to prevent a race condition between
+  the focusing js at the alert, resulting in information getting missed in screen reader announcements #}
+  <div role="alert">
+    <h2 class="mb-3 text-xl font-bold text-red-700">
+      {{ params.titleHtml | safe | trim | indent(6) if params.titleHtml else params.titleText }}
+    </h2>
+    <div class="text-red-700">
+      {% if caller or params.descriptionHtml or params.descriptionText %}
+      <p>
+        {{ caller() if caller else (params.descriptionHtml | safe | trim | indent(8) if params.descriptionHtml else params.descriptionText) }}
+      </p>
+      {% endif %}
+      {% if params.errorList | length %}
+        <ul class="pl-5 mt-3 space-y-2 list-disc">
+        {% for item in params.errorList %}
+          <li>
+          {% if item.href %}
+            <a href="{{ item.href }}"
+              {{- attributes(item.attributes) }}>
+              {{- item.html | safe | trim | indent(12) if item.html else item.text -}}
+            </a>
+          {% else %}
+            {{ item.html | safe | trim | indent(10) if item.html else item.text }}
+          {% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endmacro %}

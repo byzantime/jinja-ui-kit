@@ -1,0 +1,44 @@
+{#
+  Renders an error message with optional visually hidden prefix text.
+
+  Parameters:
+    - params.html: HTML content for the error message (safe HTML, mutually exclusive with text)
+    - params.text: Plain text content for the error message (mutually exclusive with html)
+    - params.visuallyHiddenText: Prefix text for screen readers (default: "Error")
+    - params.id: ID attribute for the error message element
+    - params.classes: Space-separated CSS classes
+    - params.attributes: Object of HTML attributes (passed to Attributes macro)
+
+  Examples:
+    Basic text error:
+    {{ errorMessage({ text: 'Please enter a valid email address' }) }}
+
+    HTML error with custom prefix:
+    {{ errorMessage({
+      html: '<strong>Invalid</strong> date format',
+      visuallyHiddenText: 'Form error',
+      classes: 'text-red'
+    }) }}
+
+    Error with ID and attributes:
+    {{ errorMessage({
+      text: 'Password must be at least 8 characters',
+      id: 'password-error',
+      attributes: { 'data-testid': 'error-message' }
+    }) }}
+#}
+{% macro errorMessage(params) %}
+{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes -%}
+
+{% set visuallyHiddenText = params.visuallyHiddenText | default("Error") -%}
+{% set errorMessageText = params.html | safe | trim | indent(2) if params.html else params.text -%}
+
+<p {%- if params.id %} id="{{ params.id }}"{% endif %} class="text-red-700 {%- if params.classes %} {{ params.classes }}{% endif %}"
+  {{- attributes(params.attributes) }}>
+  {% if visuallyHiddenText %}
+  <span class="sr-only">{{ visuallyHiddenText }}:</span> {{ errorMessageText }}
+  {% else %}
+  {{ errorMessageText }}
+  {% endif %}
+</p>
+{% endmacro %}

@@ -1,0 +1,49 @@
+{#
+  Renders a label element with optional heading wrapper and attributes.
+
+  Parameters:
+    - params.html: HTML content for the label (safe HTML, mutually exclusive with text)
+    - params.text: Plain text content for the label (mutually exclusive with html)
+    - params.classes: Space-separated CSS classes for the label
+    - params.attributes: Object of HTML attributes (passed to attributes macro)
+    - params.for: ID of associated form element (sets 'for' attribute)
+    - params.isPageHeading: If true, wraps label in an h1 element
+
+  Examples:
+    Basic text label:
+    {{ label({ text: 'Username', for: 'username' }) }}
+
+    HTML label with classes:
+    {{ label({
+      html: '<i class="fa fa-user"></i> Username',
+      classes: 'text-bold',
+      for: 'username'
+    }) }}
+
+    Page heading label:
+    {{ label({
+      text: 'Account Settings',
+      isPageHeading: true
+    }) }}
+#}
+{% macro label(params) %}
+{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes -%}
+
+{% if params.html or params.text %}
+{% set labelHtml %}
+<label class="{%- if params.classes %}{{ params.classes }}{% endif %}"
+  {{- attributes(params.attributes) -}}
+  {%- if params.for %} for="{{ params.for }}"{% endif %}>
+  {{ params.html | safe | trim | indent(2) if params.html else params.text }}
+</label>
+{% endset -%}
+
+{% if params.isPageHeading %}
+<h1 class="">
+  {{ labelHtml | safe | trim | indent(2) }}
+</h1>
+{% else %}
+{{ labelHtml | safe | trim }}
+{% endif %}
+{% endif %}
+{% endmacro %}

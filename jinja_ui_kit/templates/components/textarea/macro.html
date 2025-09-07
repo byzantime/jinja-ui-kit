@@ -1,0 +1,160 @@
+{#
+  Renders a configurable textarea component with support for labels, hints, errors.
+  Follows the same pattern as the input macro but for multi-line text input.
+
+  @param {object} params - Configuration object for the textarea
+  @param {string} params.name - Name attribute (required)
+  @param {string} [params.id] - ID attribute (defaults to name)
+  @param {object} params.label - Label configuration
+  @param {object} [params.hint] - Hint configuration
+  @param {object} [params.errorMessage] - Error message configuration
+  @param {object} [params.formGroup] - Form group wrapper
+  @param {number} [params.rows=5] - Number of textarea rows
+  @param {string} [params.value] - Initial value
+
+  Example:
+  {% from "jinja_ui_kit/templates/components/textarea/macro.html" import textarea %}
+  {{ textarea({
+    name: "description",
+    label: {
+      text: "Description"
+    },
+    hint: {
+      text: "Enter a detailed description"
+    },
+    rows: 8,
+    value: existing_value
+  }) }}
+#}
+{% macro textarea(params) %}
+{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/templates/components/error-message/macro.html" import errorMessage %}
+{% from "jinja_ui_kit/templates/components/hint/macro.html" import hint %}
+{% from "jinja_ui_kit/templates/components/label/macro.html" import label %}
+
+{#- Set classes for this component #}
+{%- set classNames = "w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y font-mono" -%}
+
+{%- if params.classes %}
+  {% set classNames = classNames ~ " " ~ params.classes %}
+{% endif %}
+
+{%- if params.errorMessage %}
+  {% set classNames = classNames ~ " border-red-500 focus:ring-red-500" %}
+{% endif %}
+
+{#- a record of other elements that we need to associate with the textarea using
+  aria-describedby – for example hints or error messages -#}
+{% set describedBy = params.describedBy if params.describedBy else undefined -%}
+{%- set id = params.id if params.id else params.name -%}
+
+{%- set hasBeforeInput = true if params.formGroup and params.formGroup.beforeInput and (params.formGroup.beforeInput.text or params.formGroup.beforeInput.html) else false %}
+{%- set hasAfterInput = true if params.formGroup and params.formGroup.afterInput and (params.formGroup.afterInput.text or params.formGroup.afterInput.html) else false %}
+
+{%- macro _textareaElement(params) -%}
+  <textarea
+    {{- attributes({
+      'class': classNames,
+      'id': id,
+      'name': params.name,
+      'rows': params.rows | default(5, true),
+      'spellcheck': {
+        'value': params.spellcheck | string | lower
+          if params.spellcheck in [true, false]
+          else false,
+        'optional': true
+      },
+      'disabled': {
+        'value': params.disabled,
+        'optional': true
+      },
+      'required': {
+        'value': params.required,
+        'optional': true
+      },
+      'readonly': {
+        'value': params.readonly,
+        'optional': true
+      },
+      'autofocus': {
+        'value': params.autofocus,
+        'optional': true
+      },
+      'placeholder': {
+        'value': params.placeholder,
+        'optional': true
+      },
+      'maxlength': {
+        'value': params.maxlength,
+        'optional': true
+      },
+      'minlength': {
+        'value': params.minlength,
+        'optional': true
+      },
+      "aria-describedby": {
+        'value': describedBy,
+        'optional': true
+      },
+      'autocomplete': {
+        'value': params.autocomplete,
+        'optional': true
+      },
+      'autocapitalize': {
+        'value': params.autocapitalize,
+        'optional': true
+      }
+    }) -}}
+    {{- attributes(params.attributes) }}>{{ params.value if params.value else '' }}</textarea>
+{%- endmacro -%}
+
+<div class="form-group {%- if params.errorMessage %} form-group--error{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"
+  {{- attributes(params.formGroup.attributes if params.formGroup) }}>
+  {{ label({
+    'html': params.label.html,
+    'text': params.label.text,
+    'classes': params.label.classes,
+    'isPageHeading': params.label.isPageHeading,
+    'attributes': params.label.attributes,
+    'for': id
+  }) | trim | indent(2) }}
+{% if params.hint %}
+  {% set hintId = id ~ '-hint' %}
+  {% set describedBy = describedBy ~ ' ' ~ hintId if describedBy else hintId %}
+  {{ hint({
+    'id': hintId,
+    'classes': params.hint.classes,
+    'attributes': params.hint.attributes,
+    'html': params.hint.html,
+    'text': params.hint.text
+  }) | trim | indent(2) }}
+{% endif %}
+{% if params.errorMessage %}
+  {% set errorId = id ~ '-error' %}
+  {% set describedBy = describedBy ~ ' ' ~ errorId if describedBy else errorId %}
+  {{ errorMessage({
+    'id': errorId,
+    'classes': params.errorMessage.classes,
+    'attributes': params.errorMessage.attributes,
+    'html': params.errorMessage.html,
+    'text': params.errorMessage.text,
+    'visuallyHiddenText': params.errorMessage.visuallyHiddenText
+  }) | trim | indent(2) }}
+{% endif %}
+
+{%- if hasBeforeInput or hasAfterInput %}
+  <div class="textarea__wrapper {%- if params.textareaWrapper and params.textareaWrapper.classes %} {{ params.textareaWrapper.classes }}{% endif %}"
+    {{- attributes(params.textareaWrapper.attributes if params.textareaWrapper) }}>
+    {% if hasBeforeInput %}
+      {{- params.formGroup.beforeInput.html | safe | trim | indent(4, true) if params.formGroup and params.formGroup.beforeInput.html else params.formGroup.beforeInput.text }}
+    {% endif %}
+    {{ _textareaElement(params) }}
+    {% if hasAfterInput %}
+      {{- params.formGroup.afterInput.html | safe | trim | indent(4, true) if params.formGroup and params.formGroup.afterInput.html else params.formGroup.afterInput.text }}
+    {% endif %}
+  </div>
+{% else %}
+  {{ _textareaElement(params) }}
+{% endif %}
+</div>
+{% endmacro %}

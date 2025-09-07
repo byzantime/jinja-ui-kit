@@ -1,0 +1,99 @@
+{#
+  Sticky Header Table Macro
+  Renders a table with a sticky header that remains fixed when scrolling
+  with optional clickable rows that emit events
+
+  Parameters:
+  - headers: List of column header objects with 'key' and 'label' properties
+  - data: List of data objects to display in the table
+  - max_height: Maximum height after which the table body becomes scrollable (e.g. '300px')
+  - row_actions: Optional list of action objects with 'label' and 'url' properties
+  - clickable_rows: Boolean to make rows clickable (defaults to false)
+  - row_click_event: Event name to trigger on row click (defaults to 'rowClicked')
+  - row_id_key: The key in the data object to use as the unique identifier (defaults to 'id')
+
+  Usage:
+  {% set headers = [
+    {'key': 'name', 'label': 'Name'},
+    {'key': 'email', 'label': 'Email'},
+    {'key': 'phone', 'label': 'Phone'}
+  ] %}
+
+  {% from "table.html" import sticky_header_table %}
+
+  {{ sticky_header_table(
+    headers=headers,
+    data=team_members,
+    max_height='400px',
+    clickable_rows=true,
+    row_click_event='openModal'
+  ) }}
+#}
+{% macro sticky_header_table(headers, data, max_height='400px', row_actions=None, clickable_rows=false, row_click_event='rowClicked', row_id_key='id') %}
+
+  <div class="overflow-hidden border border-gray-200 rounded-lg">
+    <div class="overflow-hidden">
+      <div class="overflow-y-auto" style="max-height: {{ max_height }}">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="sticky top-0 z-10 bg-gray-50">
+            <tr>
+              {% for header in headers %}
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                >
+                  {{ header.label }}
+                </th>
+              {% endfor %}
+              {% if row_actions %}
+                <th scope="col" class="relative px-6 py-3">
+                  <span class="sr-only">Actions</span>
+                </th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {% if not data %}
+              <tr>
+                <td colspan="{{ headers|length + (1 if row_actions else 0) }}" class="px-6 py-4 text-sm text-center text-gray-500">
+                  No data available
+                </td>
+              </tr>
+            {% endif %}
+            {% for item in data %}
+              {% set row_id = item[row_id_key] %}
+              <tr
+                id="row-{{ row_id }}"
+                class="{% if clickable_rows %}cursor-pointer hover:bg-gray-50{% endif %}"
+                {% if clickable_rows %}
+                _="on click trigger {{ row_click_event }}(rowId:'{{ row_id }}')"
+                {% endif %}
+              >
+                {% for header in headers %}
+                  <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                    {{ item[header.key] }}
+                  </td>
+                {% endfor %}
+                {% if row_actions %}
+                  <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
+                    {% for action in row_actions %}
+                      <a
+                        href="{{ action.url }}"
+                        class="text-indigo-600 hover:text-indigo-900"
+                        _="on click stop propagation"
+                      >
+                        {{ action.label }}
+                      </a>
+                      {% if not loop.last %} | {% endif %}
+                    {% endfor %}
+                  </td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+{% endmacro %}

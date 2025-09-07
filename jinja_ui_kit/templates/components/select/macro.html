@@ -1,0 +1,231 @@
+{% macro select(params) %}
+{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/templates/components/error-message/macro.html" import errorMessage %}
+{% from "jinja_ui_kit/templates/components/hint/macro.html" import hint %}
+{% from "jinja_ui_kit/templates/components/label/macro.html" import label %}
+  {#
+    Macro for creating a select input following govuk-frontend-jinja patterns
+    with support for labels, hints, errors, and custom attributes
+
+    Note: This macro is styling-agnostic - you must provide styling classes via
+    the 'classes' parameter. For consistent form styling, use classes like:
+    "w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+
+    Parameters:
+    - params: Object containing all select configuration
+      - name: name attribute for the select element (required)
+      - id: id attribute for the select element (optional, defaults to name)
+      - items: list of options as {value: "option_value", text: "Option Text"}
+      - value: default selected value (matches against item.value)
+      - label: string or object containing:
+        - text: label text
+        - html: label HTML content (mutually exclusive with text)
+        - classes: optional classes for label
+        - isPageHeading: wrap label in h1 if true
+        - attributes: additional attributes for label
+      - hint: object containing:
+        - text: hint text
+        - html: hint HTML content (mutually exclusive with text)
+        - classes: optional classes for hint
+        - attributes: additional attributes for hint
+      - errorMessage: object containing:
+        - text: error message text
+        - html: error message HTML content (mutually exclusive with text)
+        - classes: optional classes for error message
+        - visuallyHiddenText: prefix text for screen readers
+        - attributes: additional attributes for error message
+      - formGroup: object containing:
+        - classes: additional classes for form group wrapper
+        - attributes: additional attributes for form group wrapper
+        - beforeInput: content to render before select element
+        - afterInput: content to render after select element
+      - classes: CSS classes for the select element (REQUIRED for styling)
+      - disabled: disable the select element
+      - describedBy: additional aria-describedby values
+      - attributes: additional attributes for the select element
+      - Any other attributes will be applied directly to the select element
+  #}
+
+{#- a record of other elements that we need to associate with the input using
+  aria-describedby – for example hints or error messages -#}
+{% set describedBy = params.describedBy if params.describedBy else "" %}
+{%- set id = params.id if params.id else params.name -%}
+
+{#- Set classes for this component #}
+{%- set classNames = "" -%}
+
+{%- if params.classes %}
+  {% set classNames = classNames ~ " " ~ params.classes %}
+{% endif %}
+
+{%- if params.errorMessage %}
+  {% set classNames = classNames ~ " border-red-500 focus:ring-red-500 focus:border-red-500" %}
+{% endif %}
+
+<div class="form-group {%- if params.errorMessage %} form-group--error{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"
+  {{- attributes(params.formGroup.attributes if params.formGroup) }}>
+  {% if params.label %}
+  {{ label({
+    'html': params.label.html,
+    'text': params.label.text,
+    'classes': params.label.classes,
+    'isPageHeading': params.label.isPageHeading,
+    'attributes': params.label.attributes,
+    'for': id
+  }) | trim | indent(2) }}
+  {% endif %}
+{% if params.hint %}
+  {% set hintId = id ~ '-hint' %}
+  {% set describedBy = describedBy ~ ' ' ~ hintId if describedBy else hintId %}
+  {{ hint({
+    'id': hintId,
+    'classes': params.hint.classes,
+    'attributes': params.hint.attributes,
+    'html': params.hint.html,
+    'text': params.hint.text
+  }) | trim | indent(2) }}
+{% endif %}
+{% if params.errorMessage %}
+  {% set errorId = id ~ '-error' %}
+  {% set describedBy = describedBy ~ ' ' ~ errorId if describedBy else errorId %}
+  {{ errorMessage({
+    'id': errorId,
+    'classes': params.errorMessage.classes,
+    'attributes': params.errorMessage.attributes,
+    'html': params.errorMessage.html,
+    'text': params.errorMessage.text,
+    'visuallyHiddenText': params.errorMessage.visuallyHiddenText
+  }) | trim | indent(2) }}
+{% endif %}
+{% if params.formGroup and params.formGroup.beforeInput %}
+  {{ params.formGroup.beforeInput.html | safe | trim | indent(2) if params.formGroup and params.formGroup.beforeInput.html else params.formGroup.beforeInput.text }}
+{% endif %}
+  <select class="{{ classNames | trim }}" id="{{ id }}" name="{{ params.name }}"
+    {%- if params.disabled %} disabled{% endif %}
+    {%- if describedBy %} aria-describedby="{{ describedBy }}"{% endif %}
+    {{- attributes(params.attributes) }}>
+    {% if 'items' in params and params['items'] | length %}
+      {% for item in params['items'] %}
+        {% if item %}
+        {#- Allow selecting by text content (the value for an option when no value attribute is specified) #}
+        {%- set effectiveValue = item.value | default(item.text) %}
+        <option {%- if item.value is not undefined %} value="{{ item.value }}"{% endif %}
+          {{-" selected" if item.selected | default((effectiveValue == params.value and item.selected is not false) if params.value else false, true) }}
+          {{-" disabled" if item.disabled }}
+          {{- attributes(item.attributes) }}>
+          {{- item.text -}}
+        </option>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  </select>
+{% if params.formGroup and params.formGroup.afterInput %}
+  {{ params.formGroup.afterInput.html | safe | trim | indent(2) if params.formGroup and params.formGroup.afterInput.html else params.formGroup.afterInput.text }}
+{% endif %}
+</div>
+{% endmacro %}
+
+{#
+  Example usage:
+  {% from "jinja_ui_kit/templates/components/select/macro.html" import select %}
+
+  {% set colorItems = [
+    {'value': 'red', 'text': 'Red'},
+    {'value': 'blue', 'text': 'Blue', 'selected': true},
+    {'value': 'green', 'text': 'Green'}
+  ] %}
+
+  {# Basic select with string label #}
+  {{ select({
+    "name": "color1",
+    "id": "color_select1",
+    "items": colorItems,
+    "label": "Select a color:",
+    "classes": "w-full p-3 border border-gray-300 rounded-md"
+  }) }}
+
+  {# Select with object label and HTMX #}
+  {{ select({
+    "name": "color2",
+    "id": "color_select2",
+    "items": colorItems,
+    "value": "green",
+    "label": {
+      "text": "Color with HTMX:",
+      "classes": "font-bold"
+    },
+    "classes": "w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500",
+    "attributes": {
+      "hx-get": "/colors",
+      "hx-trigger": "change"
+    }
+  }) }}
+
+  {# Select with hint and error message #}
+  {{ select({
+    "name": "priority",
+    "id": "priority_select",
+    "items": [
+      {'value': 'low', 'text': 'Low Priority'},
+      {'value': 'medium', 'text': 'Medium Priority'},
+      {'value': 'high', 'text': 'High Priority'}
+    ],
+    "label": {
+      "text": "Task Priority:",
+      "classes": "text-indigo-600"
+    },
+    "classes": "w-full p-3 border border-gray-300 rounded-md",
+    "hint": {
+      "text": "Choose the priority level for this task"
+    },
+    "errorMessage": {
+      "text": "Please select a priority level"
+    }
+  }) }}
+
+  {# Select with custom classes, data attributes, and form group #}
+  {{ select({
+    "name": "status",
+    "id": "status_select",
+    "items": [
+      {'value': 'draft', 'text': 'Draft'},
+      {'value': 'review', 'text': 'In Review'},
+      {'value': 'published', 'text': 'Published'}
+    ],
+    "label": {
+      "text": "Document Status:"
+    },
+    "hint": {
+      "html": "This affects the <strong>visibility</strong> of the document"
+    },
+    "classes": "w-full p-3 border-2 border-indigo-600 rounded-md",
+    "formGroup": {
+      "classes": "my-4",
+      "beforeInput": {
+        "html": "<div class=\"text-sm text-blue-600 mb-2\">Status selection:</div>"
+      }
+    },
+    "attributes": {
+      "data-testid": "status-selector",
+      "data-category": "document"
+    }
+  }) }}
+
+  {# Disabled select with page heading label #}
+  {{ select({
+    "name": "readonly_field",
+    "items": [
+      {'value': 'locked', 'text': 'This field is locked'}
+    ],
+    "value": "locked",
+    "disabled": true,
+    "classes": "w-full p-3 border border-gray-300 rounded-md bg-gray-100",
+    "label": {
+      "text": "Read-only Status",
+      "isPageHeading": true
+    },
+    "hint": {
+      "text": "This field cannot be modified"
+    }
+  }) }}
+#}

@@ -1,0 +1,181 @@
+{#
+  Renders a configurable button component inspired by GOV.UK design patterns but styled with Tailwind CSS.
+  
+  @param {object} params - Configuration object for the button
+  @param {string} [params.text] - Button text content
+  @param {string} [params.html] - Button HTML content (alternative to text)
+  @param {string} [params.href] - URL for button links (creates <a> element)
+  @param {string} [params.type='submit'] - Button type for <button> elements
+  @param {string} [params.element] - Force specific element type ('button', 'a', 'input')
+  @param {boolean} [params.isStart=false] - Renders as a start button with arrow icon
+  @param {string} [params.variant='primary'] - Button variant: 'primary', 'secondary', 'warning', 'inverse'
+  @param {boolean} [params.disabled=false] - Disables the button
+  @param {boolean} [params.preventDoubleClick=false] - Prevents double-click submissions
+  @param {string} [params.classes] - Additional CSS classes
+  @param {object} [params.attributes] - Additional HTML attributes
+  @param {string} [params.name] - Name attribute for input elements
+  @param {string} [params.value] - Value attribute for input elements
+  @param {string} [params.id] - ID attribute
+
+  Examples:
+  {% from "jinja_ui_kit/templates/components/button/macro.html" import button %}
+
+  Default button:
+  {{ button({
+    text: "Continue"
+  }) }}
+
+  Start button:
+  {{ button({
+    text: "Start now",
+    href: "/start",
+    isStart: true
+  }) }}
+
+  Secondary button:
+  {{ button({
+    text: "Cancel",
+    variant: "secondary"
+  }) }}
+
+  Warning button:
+  {{ button({
+    text: "Delete account", 
+    variant: "warning"
+  }) }}
+#}
+{% macro button(params) %}
+{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes %}
+
+{#- Determine element type -#}
+{% set element = params.element if params.element else (
+  'a' if params.href else (
+    'input' if params.name or params.value else 'button'
+  )
+) %}
+
+{#- Set base classes -#}
+{% set baseClasses = "inline-flex items-center justify-center px-4 py-2 border text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200" %}
+
+{#- Set variant-specific classes -#}
+{% set variant = params.variant | default('primary') %}
+{% if variant == 'primary' %}
+  {% set variantClasses = "border-transparent text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500" %}
+{% elif variant == 'secondary' %}
+  {% set variantClasses = "border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-blue-500" %}
+{% elif variant == 'warning' %}
+  {% set variantClasses = "border-transparent text-white bg-red-600 hover:bg-red-700 focus:ring-red-500" %}
+{% elif variant == 'inverse' %}
+  {% set variantClasses = "border-gray-300 text-gray-900 bg-white hover:bg-gray-50 focus:ring-blue-500" %}
+{% else %}
+  {% set variantClasses = "border-transparent text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500" %}
+{% endif %}
+
+{#- Add start button specific classes -#}
+{% if params.isStart %}
+  {% set variantClasses = "border-transparent text-white bg-green-600 hover:bg-green-700 focus:ring-green-500" %}
+  {% set baseClasses = baseClasses ~ " pr-6" %}
+{% endif %}
+
+{#- Add disabled classes -#}
+{% set disabledClasses = "" %}
+{% if params.disabled %}
+  {% set disabledClasses = "opacity-50 cursor-not-allowed pointer-events-none" %}
+{% endif %}
+
+{#- Combine all classes -#}
+{% set classNames = baseClasses ~ " " ~ variantClasses %}
+{% if disabledClasses %}
+  {% set classNames = classNames ~ " " ~ disabledClasses %}
+{% endif %}
+{% if params.classes %}
+  {% set classNames = classNames ~ " " ~ params.classes %}
+{% endif %}
+
+{#- Render button element -#}
+{% if element == 'a' %}
+<a
+  {{- attributes({
+    'href': params.href,
+    'role': 'button',
+    'draggable': 'false',
+    'class': classNames,
+    'id': {
+      'value': params.id,
+      'optional': true
+    },
+    'aria-disabled': {
+      'value': 'true' if params.disabled else none,
+      'optional': true
+    },
+    'tabindex': {
+      'value': '-1' if params.disabled else none,
+      'optional': true
+    }
+  }) -}}
+  {{- attributes(params.attributes) }}
+  {%- if params.preventDoubleClick %} data-prevent-double-click="true"{% endif -%}
+>
+  {{- params.html | safe if params.html else params.text -}}
+  {%- if params.isStart %}
+    <svg class="ml-2 -mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    </svg>
+  {%- endif -%}
+</a>
+{% elif element == 'input' %}
+<input
+  {{- attributes({
+    'class': classNames,
+    'type': params.type | default('submit', true),
+    'value': params.text if params.text else params.value,
+    'id': {
+      'value': params.id,
+      'optional': true
+    },
+    'name': {
+      'value': params.name,
+      'optional': true
+    },
+    'disabled': {
+      'value': params.disabled,
+      'optional': true
+    }
+  }) -}}
+  {{- attributes(params.attributes) }}
+  {%- if params.preventDoubleClick %} data-prevent-double-click="true"{% endif -%}
+>
+{% else %}
+<button
+  {{- attributes({
+    'class': classNames,
+    'type': params.type | default('submit', true),
+    'id': {
+      'value': params.id,
+      'optional': true
+    },
+    'name': {
+      'value': params.name,
+      'optional': true
+    },
+    'value': {
+      'value': params.value,
+      'optional': true
+    },
+    'disabled': {
+      'value': params.disabled,
+      'optional': true
+    }
+  }) -}}
+  {{- attributes(params.attributes) }}
+  {%- if params.preventDoubleClick %} data-prevent-double-click="true"{% endif -%}
+>
+  {{- params.html | safe if params.html else params.text -}}
+  {%- if params.isStart %}
+    <svg class="ml-2 -mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    </svg>
+  {%- endif -%}
+</button>
+{% endif %}
+{% endmacro %}

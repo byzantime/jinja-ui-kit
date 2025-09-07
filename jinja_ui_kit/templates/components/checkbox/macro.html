@@ -1,0 +1,140 @@
+{#
+  Renders a configurable checkbox component with support for labels, hints, and error states.
+
+  @param {object} params - Configuration object for the checkbox
+  @param {string} params.name - Name attribute (required)
+  @param {string} [params.id] - ID attribute (defaults to name)
+  @param {string} [params.value] - Checkbox value (defaults to "on")
+  @param {boolean} [params.checked] - Whether checkbox is checked
+  @param {boolean} [params.disabled] - Whether checkbox is disabled
+  @param {object} params.label - Label configuration
+  @param {object} [params.hint] - Hint configuration
+  @param {object} [params.errorMessage] - Error message configuration
+  @param {object} [params.formGroup] - Form group wrapper
+  @param {string} [params.size] - Size variant ('small' for smaller checkboxes)
+  @param {object} [params.attributes] - Additional HTML attributes
+
+  Examples:
+  {% from "jinja_ui_kit/templates/components/checkbox/macro.html" import checkbox %}
+
+  Basic checkbox:
+  {{ checkbox({
+    'name': "newsletter",
+    'label': {
+      'text': "Subscribe to newsletter"
+    }
+  }) }}
+
+  Checkbox with hint and checked:
+  {{ checkbox({
+    'name': "terms",
+    'value': "accepted",
+    'checked': true,
+    'label': {
+      'text': "I agree to the terms and conditions"
+    },
+    'hint': {
+      'text': "You must accept the terms to continue"
+    }
+  }) }}
+
+  Checkbox with error:
+  {{ checkbox({
+    'name': "contact",
+    'label': {
+      'text': "Contact me"
+    },
+    errorMessage: {
+      'text': "Please select an option"
+    }
+  }) }}
+
+  Small checkbox (for dense layouts):
+  {{ checkbox({
+    'name': "newsletter",
+    'size': "small",
+    'label': {
+      'text': "Subscribe to newsletter"
+    }
+  }) }}
+#}
+{% macro checkbox(params) %}
+{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/templates/components/error-message/macro.html" import errorMessage %}
+{% from "jinja_ui_kit/templates/components/hint/macro.html" import hint %}
+{% from "jinja_ui_kit/templates/components/label/macro.html" import label %}
+
+{#- Set up describedBy for aria-describedby -#}
+{% set describedBy = params.describedBy if params.describedBy else undefined -%}
+{%- set id = params.id if params.id else params.name -%}
+
+{%- set hasHint = true if params.hint and (params.hint.text or params.hint.html) else false %}
+{%- set checkboxClasses = "h-6 w-6" if params.size == "small" else "h-8 w-8" %}
+{%- set checkboxClasses = checkboxClasses ~ " rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" %}
+
+<div class="relative flex items-start {%- if params.errorMessage %} mb-6{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"
+  {{- attributes(params.formGroup.attributes if params.formGroup) }}>
+
+  <div class="flex items-center {% if params.size == 'small' %}h-4{% else %}h-5{% endif %}">
+    <input
+      {{- attributes({
+        'class': checkboxClasses,
+        'id': id,
+        'name': params.name,
+        'type': 'checkbox',
+        'value': {
+          'value': params.value | default("on", true),
+          'optional': true
+        },
+        'checked': {
+          'value': params.checked,
+          'optional': true
+        },
+        'disabled': {
+          'value': params.disabled,
+          'optional': true
+        },
+        'aria-describedby': {
+          'value': describedBy,
+          'optional': true
+        }
+      }) -}}
+      {{- attributes(params.attributes) }}>
+  </div>
+
+  <div class="ml-3 text-sm">
+    {{ label({
+      'html': params.label.html,
+      'text': params.label.text,
+      'classes': "font-medium text-gray-900" ~ (' ' ~ params.label.classes if params.label and params.label.classes else ""),
+      'attributes': params.label.attributes if params.label,
+      'for': id
+    }) | trim | indent(4) }}
+
+    {% if hasHint %}
+      {% set hintId = id ~ '-hint' %}
+      {% set describedBy = describedBy ~ ' ' ~ hintId if describedBy else hintId %}
+      {{ hint({
+        'id': hintId,
+        'classes': "text-gray-600 mt-1" ~ (' ' ~ params.hint.classes if params.hint and params.hint.classes else ""),
+        'attributes': params.hint.attributes if params.hint,
+        'html': params.hint.html,
+        'text': params.hint.text
+      }) | trim | indent(6) }}
+    {% endif %}
+
+    {% if params.errorMessage %}
+      {% set errorId = id ~ '-error' %}
+      {% set describedBy = describedBy ~ ' ' ~ errorId if describedBy else errorId %}
+      {{ errorMessage({
+        'id': errorId,
+        'classes': "text-red-600 mt-1" ~ (' ' ~ params.errorMessage.classes if params.errorMessage and params.errorMessage.classes else ""),
+        'attributes': params.errorMessage.attributes if params.errorMessage,
+        'html': params.errorMessage.html,
+        'text': params.errorMessage.text,
+        'visuallyHiddenText': params.errorMessage.visuallyHiddenText
+      }) | trim | indent(6) }}
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
