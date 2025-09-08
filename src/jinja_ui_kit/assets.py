@@ -13,4 +13,4 @@ def get_css_path() -> str:
         FileNotFoundError: If the CSS file is not found
     """
     css_file = files("jinja_ui_kit") / "dist" / "jinja-ui-kit.min.css"
-    return str(css_file.read_text())
+    return str(css_file)
