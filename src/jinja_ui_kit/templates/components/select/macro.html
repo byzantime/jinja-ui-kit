@@ -1,8 +1,8 @@
 {% macro select(params) %}
-{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes %}
-{% from "jinja_ui_kit/templates/components/error-message/macro.html" import errorMessage %}
-{% from "jinja_ui_kit/templates/components/hint/macro.html" import hint %}
-{% from "jinja_ui_kit/templates/components/label/macro.html" import label %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
+{% from "jinja_ui_kit/components/hint/macro.html" import hint %}
+{% from "jinja_ui_kit/components/label/macro.html" import label %}
   {#
     Macro for creating a select input following govuk-frontend-jinja patterns
     with support for labels, hints, errors, and custom attributes
@@ -127,7 +127,7 @@
 
 {#
   Example usage:
-  {% from "jinja_ui_kit/templates/components/select/macro.html" import select %}
+  {% from "jinja_ui_kit/components/select/macro.html" import select %}
 
   {% set colorItems = [
     {'value': 'red', 'text': 'Red'},

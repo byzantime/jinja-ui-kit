@@ -7,6 +7,10 @@
 # Ignore Python cache
 __pycache__
 
+# Ignore Python packaging files
+*.egg-info
+*.dist-info
+
 # Ignore virtualenv
 .venv
 

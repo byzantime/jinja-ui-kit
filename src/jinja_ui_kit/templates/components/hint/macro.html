@@ -1,5 +1,5 @@
 {% macro hint(params) %}
-{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes -%}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes -%}
 
 <div {%- if params.id %} id="{{ params.id }}"{% endif %} class="block text-sm text-gray-600 mb-2{%- if params.classes %} {{ params.classes }}{% endif %}"
   {{- attributes(params.attributes) }}>

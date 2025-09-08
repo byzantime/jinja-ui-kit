@@ -1,6 +1,6 @@
 {#
   Renders a configurable button component inspired by GOV.UK design patterns but styled with Tailwind CSS.
-  
+
   @param {object} params - Configuration object for the button
   @param {string} [params.text] - Button text content
   @param {string} [params.html] - Button HTML content (alternative to text)
@@ -18,7 +18,7 @@
   @param {string} [params.id] - ID attribute
 
   Examples:
-  {% from "jinja_ui_kit/templates/components/button/macro.html" import button %}
+  {% from "jinja_ui_kit/components/button/macro.html" import button %}
 
   Default button:
   {{ button({
@@ -40,12 +40,12 @@
 
   Warning button:
   {{ button({
-    text: "Delete account", 
+    text: "Delete account",
     variant: "warning"
   }) }}
 #}
 {% macro button(params) %}
-{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
 
 {#- Determine element type -#}
 {% set element = params.element if params.element else (

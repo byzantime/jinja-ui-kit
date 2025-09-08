@@ -14,7 +14,7 @@
   @param {object} [params.suffix] - Suffix configuration
 
   Examples:
-  {% from "jinja_ui_kit/templates/components/input/macro.html" import input %}
+  {% from "jinja_ui_kit/components/input/macro.html" import input %}
 
   Basic text input with label and hint
   {{ input({
@@ -46,10 +46,10 @@
   }) }}
 #}
 {% macro input(params) %}
-{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes %}
-{% from "jinja_ui_kit/templates/components/error-message/macro.html" import errorMessage %}
-{% from "jinja_ui_kit/templates/components/hint/macro.html" import hint %}
-{% from "jinja_ui_kit/templates/components/label/macro.html" import label %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
+{% from "jinja_ui_kit/components/hint/macro.html" import hint %}
+{% from "jinja_ui_kit/components/label/macro.html" import label %}
 
 {#- a record of other elements that we need to associate with the input using
   aria-describedby – for example hints or error messages -#}

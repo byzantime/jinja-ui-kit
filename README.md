@@ -21,8 +21,8 @@ jinja-ui-kit @ git+https://github.com/byzantime/jinja-ui-kit.git
 Import components in your Jinja2 templates:
 
 ```jinja2
-{% from "jinja_ui_kit/templates/components/button/macro.html" import button %}
-{% from "jinja_ui_kit/templates/components/input/macro.html" import input %}
+{% from "jinja_ui_kit/components/button/macro.html" import button %}
+{% from "jinja_ui_kit/components/input/macro.html" import input %}
 
 {{ button({
   "text": "Continue",

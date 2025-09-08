@@ -13,7 +13,7 @@
   @param {object} [params.attributes] - Additional HTML attributes for the accordion wrapper
 
   Examples:
-  {% from "jinja_ui_kit/templates/components/accordion/macro.html" import accordion %}
+  {% from "jinja_ui_kit/components/accordion/macro.html" import accordion %}
 
   Basic accordion with mixed default states:
   {{ accordion({
@@ -28,7 +28,7 @@
 #}
 
 {% macro accordion(params) %}
-{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
 
 {% set sections = params.sections %}
 {% set id_prefix = params.id_prefix or 'accordion' %}

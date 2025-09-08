@@ -15,7 +15,7 @@
   @param {string} [params.classes] - Additional CSS classes for the input
 
   Examples:
-  {% from "jinja_ui_kit/templates/components/file-upload/macro.html" import fileUpload %}
+  {% from "jinja_ui_kit/components/file-upload/macro.html" import fileUpload %}
 
   Basic file upload with label and hint
   {{ fileUpload({
@@ -43,10 +43,10 @@
   }) }}
 #}
 {% macro fileUpload(params) %}
-{% from "jinja_ui_kit/templates/macros/attributes.html" import attributes %}
-{% from "jinja_ui_kit/templates/components/error-message/macro.html" import errorMessage %}
-{% from "jinja_ui_kit/templates/components/hint/macro.html" import hint %}
-{% from "jinja_ui_kit/templates/components/label/macro.html" import label %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
+{% from "jinja_ui_kit/components/hint/macro.html" import hint %}
+{% from "jinja_ui_kit/components/label/macro.html" import label %}
 
 {#- a record of other elements that we need to associate with the input using
   aria-describedby – for example hints or error messages -#}

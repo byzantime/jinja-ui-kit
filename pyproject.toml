@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=3.11,<4"]
+build-backend = "flit_core.buildapi"
 
 [project]
 name = "jinja-ui-kit"
@@ -13,6 +13,3 @@ requires-python = ">=3.8"
 
 [project.urls]
 Homepage = "https://github.com/byzantime/jinja-ui-kit"
-
-[tool.setuptools.package-data]
-jinja_ui_kit = ["templates/**/*.html"]
