@@ -1,0 +1,12 @@
+{
+  "name": "jinja-ui-kit",
+  "version": "0.1.0",
+  "description": "Build tools for jinja-ui-kit CSS generation",
+  "private": true,
+  "scripts": {
+    "build": "tailwindcss -i ./src/styles/input.css -o ./dist/jinja-ui-kit.min.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.6"
+  }
+}

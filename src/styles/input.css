@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom component styles for jinja-ui-kit */
+/* These styles complement the Tailwind utility classes used in components */
+
+/* Ensure proper box-sizing for all components */
+.jinja-ui-kit * {
+  box-sizing: border-box;
+}
+
+/* Additional component-specific styles can be added here */

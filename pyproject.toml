@@ -13,3 +13,20 @@ requires-python = ">=3.8"
 
 [project.urls]
 Homepage = "https://github.com/byzantime/jinja-ui-kit"
+
+[tool.flit.module]
+name = "jinja_ui_kit"
+
+[tool.flit.sdist]
+include = [
+    "src/jinja_ui_kit/dist/jinja-ui-kit.min.css",
+    "src/jinja_ui_kit/templates/**/*.html",
+    "README.md",
+    "LICENSE.txt",
+]
+exclude = [
+    "node_modules/",
+    "package*.json",
+    "tailwind.config.js",
+    "src/styles/",
+]
