@@ -1,0 +1,199 @@
+{#
+  Renders a configurable checkboxes component with support for conditional reveal functionality.
+
+  @param {object} params - Configuration object for the checkboxes
+  @param {string} [params.name] - Name attribute for all checkboxes
+  @param {array} params.items - Array of checkbox items (required)
+  @param {object} [params.fieldset] - Fieldset configuration
+  @param {object} [params.hint] - Hint configuration for the fieldset
+  @param {object} [params.errorMessage] - Error message configuration
+  @param {object} [params.formGroup] - Form group wrapper
+  @param {string} [params.size] - Size variant ('small' for smaller checkboxes)
+  @param {object} [params.attributes] - Additional HTML attributes
+
+  Item structure:
+  @param {string} item.name - Name attribute (falls back to params.name)
+  @param {string} [item.id] - ID attribute (defaults to name)
+  @param {string} [item.value] - Checkbox value
+  @param {string} [item.text] - Label text
+  @param {string} [item.html] - Label HTML (takes precedence over text)
+  @param {boolean} [item.checked] - Whether checkbox is checked
+  @param {boolean} [item.disabled] - Whether checkbox is disabled
+  @param {object} [item.hint] - Hint configuration for this item
+  @param {object} [item.conditional] - Conditional reveal configuration
+  @param {string} [item.conditional.html] - HTML to reveal when checked
+  @param {object} [item.attributes] - Additional HTML attributes for this item
+
+  Examples:
+  {% from "jinja_ui_kit/components/checkboxes/macro.html" import checkboxes %}
+
+  Basic checkboxes:
+  {{ checkboxes({
+    'name': 'contact',
+    'fieldset': {
+      'legend': {
+        'text': 'How would you like to be contacted?'
+      }
+    },
+    'items': [
+      {
+        'value': 'email',
+        'text': 'Email'
+      },
+      {
+        'value': 'phone',
+        'text': 'Phone'
+      }
+    ]
+  }) }}
+
+  Checkboxes with conditional reveal ('html' can be another component macro):
+  {{ checkboxes({
+    'name': 'contact',
+    'items': [
+      {
+        'value': 'email',
+        'text': 'Email',
+        'conditional': {
+          'html': '<input type="email" name="email-address" placeholder="Enter your email address">'
+        }
+      },
+      {
+        'value': 'phone',
+        'text': 'Phone',
+        'conditional': {
+          'html': '<input type="tel" name="phone-number" placeholder="Enter your phone number">'
+        }
+      }
+    ]
+  }) }}
+#}
+{% macro checkboxes(params) %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
+{% from "jinja_ui_kit/components/hint/macro.html" import hint %}
+{% from "jinja_ui_kit/components/label/macro.html" import label %}
+{% from "jinja_ui_kit/components/fieldset/macro.html" import fieldset %}
+
+{#- Set up describedBy for aria-describedby -#}
+{% set describedBy = params.describedBy if params.describedBy else undefined -%}
+{%- set hasFieldset = true if params.fieldset else false %}
+{%- set hasHint = true if params.hint and (params.hint.text or params.hint.html) else false %}
+{%- set checkboxClasses = "h-6 w-6" if params.size == "small" else "h-8 w-8" %}
+{%- set checkboxClasses = checkboxClasses ~ " rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" %}
+
+{%- set outerHtml %}
+<div class="space-y-4 {%- if params.errorMessage %} mb-6{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"
+  {{- attributes(params.formGroup.attributes if params.formGroup) }}>
+
+  {% if hasHint %}
+    {% set hintId = (params.name if params.name else 'checkboxes') ~ '-hint' %}
+    {% set describedBy = describedBy ~ ' ' ~ hintId if describedBy else hintId %}
+    {{ hint({
+      'id': hintId,
+      'classes': "text-gray-600 mb-4" ~ (' ' ~ params.hint.classes if params.hint and params.hint.classes else ""),
+      'attributes': params.hint.attributes if params.hint,
+      'html': params.hint.html,
+      'text': params.hint.text
+    }) | trim }}
+  {% endif %}
+
+  {% if params.errorMessage %}
+    {% set errorId = (params.name if params.name else 'checkboxes') ~ '-error' %}
+    {% set describedBy = describedBy ~ ' ' ~ errorId if describedBy else errorId %}
+    {{ errorMessage({
+      'id': errorId,
+      'classes': "text-red-600 mb-4" ~ (' ' ~ params.errorMessage.classes if params.errorMessage and params.errorMessage.classes else ""),
+      'attributes': params.errorMessage.attributes if params.errorMessage,
+      'html': params.errorMessage.html,
+      'text': params.errorMessage.text,
+      'visuallyHiddenText': params.errorMessage.visuallyHiddenText
+    }) | trim }}
+  {% endif %}
+
+  <div class="space-y-3">
+    {% for item in params['items'] %}
+      {%- set itemName = item.name if item.name else params.name -%}
+      {%- set itemId = item.id if item.id else (itemName ~ '-' ~ loop.index if itemName else 'checkbox-' ~ loop.index) -%}
+      {%- set isChecked = true if item.checked else false -%}
+      {%- set hasConditional = true if item.conditional and item.conditional.html else false -%}
+      {%- set conditionalId = itemId ~ '-conditional' if hasConditional else undefined -%}
+
+      <div class="relative">
+        <div class="flex items-start">
+          <div class="flex items-center {% if params.size == 'small' %}h-4{% else %}h-5{% endif %}">
+            <input
+              {{- attributes({
+                'class': checkboxClasses,
+                'id': itemId,
+                'name': itemName,
+                'type': 'checkbox',
+                'value': {
+                  'value': item.value,
+                  'optional': true
+                },
+                'checked': {
+                  'value': isChecked,
+                  'optional': true
+                },
+                'disabled': {
+                  'value': item.disabled,
+                  'optional': true
+                },
+                'aria-describedby': {
+                  'value': describedBy,
+                  'optional': true
+                },
+                'data-aria-controls': {
+                  'value': conditionalId if hasConditional else undefined,
+                  'optional': true
+                }
+              }) -}}
+              {% if hasConditional %}_="on change toggle .hidden on #{{ conditionalId }}"{% endif %}
+              {{- attributes(item.attributes) }}>
+          </div>
+
+          <div class="ml-3 text-sm">
+            {{ label({
+              'html': item.html,
+              'text': item.text,
+              'classes': "font-medium text-gray-900" ~ (' ' ~ item.label.classes if item.label and item.label.classes else ""),
+              'attributes': item.label.attributes if item.label,
+              'for': itemId
+            }) | trim }}
+
+            {% if item.hint %}
+              {% set itemHintId = itemId ~ '-hint' %}
+              {{ hint({
+                'id': itemHintId,
+                'classes': "text-gray-600 mt-1" ~ (' ' ~ item.hint.classes if item.hint and item.hint.classes else ""),
+                'attributes': item.hint.attributes if item.hint,
+                'html': item.hint.html,
+                'text': item.hint.text
+              }) | trim }}
+            {% endif %}
+          </div>
+        </div>
+
+        {% if hasConditional %}
+          <div class="ml-8 mt-3 {%- if not isChecked %} hidden{% endif %}" id="{{ conditionalId }}">
+            {{ item.conditional.html | safe | trim }}
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{%- endset %}
+
+{% if hasFieldset %}
+  {{ fieldset({
+    'legend': params.fieldset.legend,
+    'classes': params.fieldset.classes,
+    'attributes': params.fieldset.attributes,
+    'html': outerHtml | trim
+  }) | trim }}
+{% else %}
+  {{ outerHtml | trim }}
+{% endif %}
+{% endmacro %}

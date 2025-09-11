@@ -1,0 +1,44 @@
+{#
+  Renders a fieldset with optional legend.
+
+  @param {object} params - Configuration object for the fieldset
+  @param {object} [params.legend] - Legend configuration
+  @param {string} [params.legend.text] - Legend text
+  @param {string} [params.legend.html] - Legend HTML (takes precedence over text)
+  @param {string} [params.legend.classes] - Additional CSS classes for legend
+  @param {object} [params.legend.attributes] - Additional HTML attributes for legend
+  @param {string} [params.classes] - Additional CSS classes for fieldset
+  @param {object} [params.attributes] - Additional HTML attributes for fieldset
+  @param {string} params.html - HTML content for the fieldset (required)
+
+  Examples:
+  {% from "jinja_ui_kit/components/fieldset/macro.html" import fieldset %}
+
+  Basic fieldset:
+  {{ fieldset({
+    'legend': {
+      'text': 'Contact details'
+    },
+    'html': '<input type="text" name="name" placeholder="Name">'
+  }) }}
+#}
+{% macro fieldset(params) %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+
+<fieldset class="border-0 p-0 m-0 {{ params.classes if params.classes else '' }}"
+  {{- attributes(params.attributes) }}>
+
+  {% if params.legend %}
+    <legend class="text-lg font-semibold text-gray-900 mb-4 {{ params.legend.classes if params.legend.classes else '' }}"
+      {{- attributes(params.legend.attributes) }}>
+      {% if params.legend.html %}
+        {{ params.legend.html | safe }}
+      {% else %}
+        {{ params.legend.text }}
+      {% endif %}
+    </legend>
+  {% endif %}
+
+  {{ params.html | safe }}
+</fieldset>
+{% endmacro %}
