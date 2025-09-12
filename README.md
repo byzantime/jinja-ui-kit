@@ -100,7 +100,7 @@ Import components in your Jinja2 templates:
 - **Input** - Text inputs with label, hint, and error support
 - **Textarea** - Multi-line text inputs
 - **Select** - Dropdown select inputs
-- **Checkbox** - Checkbox inputs with proper labeling
+- **Checkboxes** - Multiple checkbox inputs with proper labeling and conditional reveal support
 - **File Upload** - File input with drag-and-drop styling
 
 ### UI Components
@@ -156,7 +156,7 @@ Import components in your Jinja2 templates:
 {% from "jinja_ui_kit/components/input/macro.html" import input %}
 {% from "jinja_ui_kit/components/textarea/macro.html" import textarea %}
 {% from "jinja_ui_kit/components/select/macro.html" import select %}
-{% from "jinja_ui_kit/components/checkbox/macro.html" import checkbox %}
+{% from "jinja_ui_kit/components/checkboxes/macro.html" import checkboxes %}
 
 <!-- Text input with validation -->
 {{ input({
@@ -188,11 +188,24 @@ Import components in your Jinja2 templates:
   ]
 }) }}
 
-<!-- Checkbox -->
-{{ checkbox({
-  'name': "subscribe",
-  'label': {"text": "Subscribe to newsletter"},
-  'hint': {"text": "Get updates about new features"}
+<!-- Checkboxes -->
+{{ checkboxes({
+  'name': 'contact',
+  'fieldset': {
+    'legend': {
+      'text': 'How would you like to be contacted?'
+    }
+  },
+  'items': [
+    {
+      'value': 'email',
+      'text': 'Email'
+    },
+    {
+      'value': 'phone',
+      'text': 'Phone'
+    }
+  ]
 }) }}
 ```
 
