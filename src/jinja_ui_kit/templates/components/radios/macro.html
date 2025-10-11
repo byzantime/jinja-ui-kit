@@ -155,7 +155,7 @@
                   'optional': true
                 }
               }) -}}
-              {% if hasConditional %}_="on change
+              {% if hasConditional %} _="on change
                 -- Hide all conditionals in this radio group
                 repeat for conditionalEl in <[id^='{{ params.name }}-'][id$='-conditional']/>
                   add .hidden to conditionalEl

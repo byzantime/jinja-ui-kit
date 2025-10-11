@@ -235,6 +235,13 @@ Import components in your Jinja2 templates:
 }) }}
 ```
 
+## Development
+
+```bash
+# Rebuild CSS after making changes
+tailwindcss -i ./src/styles/input.css -o ./src/jinja_ui_kit/dist/jinja-ui-kit.min.css --minify
+```
+
 ## Design Philosophy
 
 This library follows the GOV.UK Frontend approach of:
