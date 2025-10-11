@@ -101,6 +101,7 @@ Import components in your Jinja2 templates:
 - **Textarea** - Multi-line text inputs
 - **Select** - Dropdown select inputs
 - **Checkboxes** - Multiple checkbox inputs with proper labeling and conditional reveal support
+- **Radios** - Radio button groups with proper labeling and conditional reveal support
 - **File Upload** - File input with drag-and-drop styling
 
 ### UI Components
@@ -157,6 +158,7 @@ Import components in your Jinja2 templates:
 {% from "jinja_ui_kit/components/textarea/macro.html" import textarea %}
 {% from "jinja_ui_kit/components/select/macro.html" import select %}
 {% from "jinja_ui_kit/components/checkboxes/macro.html" import checkboxes %}
+{% from "jinja_ui_kit/components/radios/macro.html" import radios %}
 
 <!-- Text input with validation -->
 {{ input({
@@ -204,6 +206,30 @@ Import components in your Jinja2 templates:
     {
       'value': 'phone',
       'text': 'Phone'
+    }
+  ]
+}) }}
+
+<!-- Radios -->
+{{ radios({
+  'name': 'contact-method',
+  'fieldset': {
+    'legend': {
+      'text': 'How would you prefer to be contacted?'
+    }
+  },
+  'items': [
+    {
+      'value': 'email',
+      'text': 'Email'
+    },
+    {
+      'value': 'phone',
+      'text': 'Phone'
+    },
+    {
+      'value': 'text',
+      'text': 'Text message'
     }
   ]
 }) }}
