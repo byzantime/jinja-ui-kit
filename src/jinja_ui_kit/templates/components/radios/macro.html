@@ -86,7 +86,7 @@
 {% set describedBy = params.describedBy if params.describedBy else undefined -%}
 {%- set hasFieldset = true if params.fieldset else false %}
 {%- set hasHint = true if params.hint and (params.hint.text or params.hint.html) else false %}
-{%- set radioClasses = "h-6 w-6" if params.size == "small" else "h-8 w-8" %}
+{%- set radioClasses = "h-5 w-5" if params.size == "small" else "h-6 w-6" %}
 {%- set radioClasses = radioClasses ~ " border-2 border-gray-900 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" %}
 
 {%- set outerHtml %}
@@ -127,7 +127,7 @@
 
       <div class="relative">
         <div class="flex items-start">
-          <div class="flex items-center {% if params.size == 'small' %}h-4{% else %}h-5{% endif %}">
+          <div class="flex items-center h-4">
             <input
               {{- attributes({
                 'class': radioClasses,
