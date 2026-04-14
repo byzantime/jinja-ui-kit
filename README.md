@@ -41,9 +41,39 @@ app.jinja_loader = ChoiceLoader([
 
 ### 2. Include CSS Styles
 
-jinja-ui-kit provides a pre-compiled CSS file containing all necessary Tailwind classes. Include it in your asset pipeline:
+**If your project uses Tailwind CSS (recommended)**
 
-**With asset bundling (Quart-Assets, Flask-Assets, etc.):**
+Add jinja-ui-kit's templates to your Tailwind content scan so all needed utility classes are compiled into your single project build. Because the template path is only knowable at Python runtime, generate a small JS shim as a build step and add it to `.gitignore`:
+
+```bash
+# In your build script (e.g. local_build.sh), before running tailwindcss:
+python -c "from jinja_ui_kit.assets import write_tailwind_content; write_tailwind_content()"
+```
+
+Then require it in `tailwind.config.js`:
+
+```js
+const { content: kitContent } = require('./jinja_ui_kit_tailwind.js');
+
+module.exports = {
+  content: [
+    "./src/templates/**/*.html",
+    ...kitContent,
+  ],
+};
+```
+
+Add the generated file to `.gitignore` — it contains a machine-specific absolute path and should be regenerated on each environment setup:
+
+```
+jinja_ui_kit_tailwind.js
+```
+
+This approach avoids shipping two separate Tailwind builds, which can cause cascade conflicts where duplicate utility class definitions override each other depending on bundle order.
+
+**If your project does not use Tailwind CSS**
+
+jinja-ui-kit ships a pre-compiled CSS file containing all necessary classes. Include it in your asset pipeline before your own styles:
 
 ```python
 from quart_assets import Bundle, QuartAssets
@@ -52,16 +82,15 @@ from jinja_ui_kit.assets import get_css_path
 assets = QuartAssets(app)
 
 css_bundle = Bundle(
-    get_css_path(),  # jinja-ui-kit styles first
-    "css/your-app.css",  # Your application styles
-    "css/other-styles.css",
+    get_css_path(),        # jinja-ui-kit styles
+    "css/your-app.css",    # your application styles
     output="css/packed-%(version)s.min.css",
 )
 
 assets.register("css_all", css_bundle)
 ```
 
-**With direct HTML link tag:**
+Or with a direct `<link>` tag:
 
 ```html
 <link rel="stylesheet" href="{{ url_for('static', filename='css/jinja-ui-kit.min.css') }}">
