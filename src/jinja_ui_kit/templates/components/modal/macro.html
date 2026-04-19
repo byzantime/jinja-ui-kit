@@ -1,0 +1,136 @@
+{#
+  Renders a modal dialog with overlay, header, and scrollable body.
+
+  @param {object} params - Configuration object for the modal
+  @param {string} [params.id='modal'] - ID for the overlay element. Content panel gets id="{id}-content",
+      title heading gets id="{id}-title" (always rendered for hyperscript targeting).
+  @param {string} [params.title] - Header title text
+  @param {string} [params.titleHtml] - Header title HTML (takes precedence over title)
+  @param {string} [params.subtitle] - Header subtitle text
+  @param {string} [params.subtitleHtml] - Header subtitle HTML (takes precedence over subtitle)
+  @param {string} [params.icon] - HTML string rendered in a rounded icon container in the header
+  @param {string} [params.size='lg'] - Content panel width: 'sm' (max-w-md), 'lg' (max-w-4xl), 'xl' (max-w-6xl)
+  @param {boolean} [params.autoOpen=false] - Start the modal visible (flex) instead of hidden
+  @param {boolean} [params.showCloseButton=true] - Render a close (✕) button in the header
+  @param {boolean} [params.enableKeyboardClose=true] - Close on Escape key
+  @param {string} [params.customClasses] - Extra CSS classes on the content panel
+  @param {string} [params.headerClasses] - Extra CSS classes on the header div
+  @param {string} [params.bodyClasses] - Extra CSS classes on the scrollable body div
+  @param {string} [params.bodyId] - ID for the body div (useful as an HTMX swap target)
+  @param {object} [params.attributes] - Additional HTML attributes on the overlay element
+
+  Usage:
+  {% from "jinja_ui_kit/components/modal/macro.html" import modal %}
+
+  Basic modal:
+  {% call modal({'id': 'confirm-modal', 'title': 'Are you sure?', 'size': 'sm'}) %}
+    <p class="p-6">This action cannot be undone.</p>
+  {% endcall %}
+
+  Modal with dynamic title (set via hyperscript):
+  {% call modal({'id': 'detail-modal', 'showCloseButton': true}) %}
+    <div id="detail-modal-body"></div>
+  {% endcall %}
+  {# Then in hyperscript: set #detail-modal-title's textContent to row's @data-label #}
+
+  Modal opened via hyperscript:
+  <button _="on click remove .hidden from #confirm-modal add .flex to #confirm-modal">Open</button>
+
+  Modal with HTMX body:
+  {% call modal({'id': 'htmx-modal', 'title': 'Details', 'bodyId': 'htmx-modal-body'}) %}
+    <div class="p-4 text-gray-400">Loading…</div>
+  {% endcall %}
+  {# HTMX can then swap into #htmx-modal-body #}
+#}
+{% macro modal(params) %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+
+{#- Resolve params with defaults -#}
+{%- set id = params.id if params.id is defined and params.id else "modal" -%}
+{%- set size = params.size if params.size is defined and params.size else "lg" -%}
+{%- set autoOpen = params.autoOpen if params.autoOpen is defined else false -%}
+{%- set showCloseButton = params.showCloseButton if params.showCloseButton is defined else true -%}
+{%- set enableKeyboardClose = params.enableKeyboardClose if params.enableKeyboardClose is defined else true -%}
+{%- set customClasses = params.customClasses if params.customClasses is defined else "" -%}
+{%- set headerClasses = params.headerClasses if params.headerClasses is defined else "" -%}
+{%- set bodyClasses = params.bodyClasses if params.bodyClasses is defined else "" -%}
+
+{%- set size_classes = {
+    'sm': 'max-w-md',
+    'lg': 'max-w-4xl',
+    'xl': 'max-w-6xl'
+} -%}
+{%- set sizeClass = size_classes[size] if size in size_classes else 'max-w-4xl' -%}
+
+{%- set hasHeader = params.title or params.titleHtml or params.subtitle or params.subtitleHtml or params.icon or showCloseButton -%}
+
+<!-- Modal Overlay -->
+<div
+  id="{{ id }}"
+  class="fixed inset-0 z-50 items-center justify-center {{ 'flex' if autoOpen else 'hidden' }} bg-black bg-opacity-50"
+  {% if enableKeyboardClose %}
+  _="on click
+       add .hidden to me
+       remove .flex from me
+     on keydown[key=='Escape'] from document
+       add .hidden to me
+       remove .flex from me"
+  {% else %}
+  _="on click
+       add .hidden to me
+       remove .flex from me"
+  {% endif %}
+  {{- attributes(params.attributes) -}}>
+
+  <!-- Modal Content -->
+  <div
+    id="{{ id }}-content"
+    class="relative z-50 flex flex-col w-full {{ sizeClass }} mx-4 bg-white rounded-2xl shadow-2xl max-h-[90vh]{{ ' ' ~ customClasses if customClasses }}"
+    _="on click halt bubbling">
+
+    {% if hasHeader %}
+    <!-- Modal Header -->
+    <div class="px-6 py-4 border-b border-gray-200{{ ' ' ~ headerClasses if headerClasses }}">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          {% if params.icon %}
+          <div class="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full flex-shrink-0">
+            {{ params.icon | safe }}
+          </div>
+          {% endif %}
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900" id="{{ id }}-title">
+              {%- if params.titleHtml %}{{ params.titleHtml | safe }}{% elif params.title %}{{ params.title }}{% endif -%}
+            </h3>
+            {% if params.subtitleHtml or params.subtitle %}
+            <p class="text-sm text-gray-600">
+              {%- if params.subtitleHtml %}{{ params.subtitleHtml | safe }}{% else %}{{ params.subtitle }}{% endif -%}
+            </p>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if showCloseButton %}
+        <button
+          type="button"
+          class="text-gray-400 transition-colors hover:text-gray-600"
+          _="on click
+               add .hidden to #{{ id }}
+               remove .flex from #{{ id }}">
+          <i class="text-xl fa-solid fa-times"></i>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Modal Body -->
+    <div
+      {% if params.bodyId %}id="{{ params.bodyId }}"{% endif %}
+      class="flex-1 overflow-y-auto{{ ' ' ~ bodyClasses if bodyClasses }}">
+      {{ caller() }}
+    </div>
+
+  </div>
+</div>
+{% endmacro %}
