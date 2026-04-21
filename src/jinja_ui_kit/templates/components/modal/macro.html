@@ -31,7 +31,7 @@
   {% call modal({'id': 'detail-modal', 'showCloseButton': true}) %}
     <div id="detail-modal-body"></div>
   {% endcall %}
-  {# Then in hyperscript: set #detail-modal-title's textContent to row's @data-label #}
+  Then in hyperscript: set #detail-modal-title's textContent to row's @data-label
 
   Modal opened via hyperscript:
   <button _="on click remove .hidden from #confirm-modal add .flex to #confirm-modal">Open</button>
@@ -40,7 +40,7 @@
   {% call modal({'id': 'htmx-modal', 'title': 'Details', 'bodyId': 'htmx-modal-body'}) %}
     <div class="p-4 text-gray-400">Loading…</div>
   {% endcall %}
-  {# HTMX can then swap into #htmx-modal-body #}
+  HTMX can then swap into #htmx-modal-body
 #}
 {% macro modal(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
