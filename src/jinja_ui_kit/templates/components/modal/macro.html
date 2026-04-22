@@ -17,6 +17,9 @@
   @param {string} [params.headerClasses] - Extra CSS classes on the header div
   @param {string} [params.bodyClasses] - Extra CSS classes on the scrollable body div
   @param {string} [params.bodyId] - ID for the body div (useful as an HTMX swap target)
+  @param {string} [params.footerHtml] - HTML rendered in a non-scrolling footer below the body. For complex
+      Jinja content (forms, macros), capture with {% set footer %}...{% endset %} and pass the variable.
+  @param {string} [params.footerClasses] - Extra CSS classes on the footer div
   @param {object} [params.attributes] - Additional HTML attributes on the overlay element
 
   Usage:
@@ -54,6 +57,8 @@
 {%- set customClasses = params.customClasses if params.customClasses is defined else "" -%}
 {%- set headerClasses = params.headerClasses if params.headerClasses is defined else "" -%}
 {%- set bodyClasses = params.bodyClasses if params.bodyClasses is defined else "" -%}
+{%- set footerHtml = params.footerHtml if params.footerHtml is defined else "" -%}
+{%- set footerClasses = params.footerClasses if params.footerClasses is defined else "" -%}
 
 {%- set size_classes = {
     'sm': 'max-w-md',
@@ -130,6 +135,13 @@
       class="flex-1 overflow-y-auto{{ ' ' ~ bodyClasses if bodyClasses }}">
       {{ caller() }}
     </div>
+
+    {% if footerHtml %}
+    <!-- Modal Footer -->
+    <div class="shrink-0 px-6 py-4 border-t border-gray-200{{ ' ' ~ footerClasses if footerClasses }}">
+      {{ footerHtml | safe }}
+    </div>
+    {% endif %}
 
   </div>
 </div>
