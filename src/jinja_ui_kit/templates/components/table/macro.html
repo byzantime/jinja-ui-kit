@@ -1,99 +1,140 @@
 {#
   Sticky Header Table Macro
-  Renders a table with a sticky header that remains fixed when scrolling
-  with optional clickable rows that emit events
+  Renders a table with a sticky header that remains fixed when scrolling,
+  with optional clickable rows that emit Hyperscript events.
 
-  Parameters:
-  - headers: List of column header objects with 'key' and 'label' properties
-  - data: List of data objects to display in the table
-  - max_height: Maximum height after which the table body becomes scrollable (e.g. '300px')
-  - row_actions: Optional list of action objects with 'label' and 'url' properties
-  - clickable_rows: Boolean to make rows clickable (defaults to false)
-  - row_click_event: Event name to trigger on row click (defaults to 'rowClicked')
-  - row_id_key: The key in the data object to use as the unique identifier (defaults to 'id')
+  Follows the GOV.UK Frontend Jinja table schema, extended with scrolling
+  and clickable-row support.
+
+  @param {object} params - Configuration object
+  @param {Array}  params.head - List of column header objects
+  @param {string} [params.head[].text] - Header cell text content
+  @param {string} [params.head[].html] - Header cell HTML content (takes precedence over text)
+  @param {string} [params.head[].classes] - Extra CSS classes on the <th> element
+  @param {object} [params.head[].attributes] - Extra HTML attributes on the <th> element
+  @param {Array}  [params.rows] - List of row objects
+  @param {Array}  params.rows[].cells - List of cell objects for the row
+  @param {string} [params.rows[].cells[].text] - Cell text content
+  @param {string} [params.rows[].cells[].html] - Cell HTML content, rendered safe (takes precedence over text)
+  @param {string} [params.rows[].cells[].classes] - Extra CSS classes on the <td> element
+  @param {object} [params.rows[].cells[].attributes] - Extra HTML attributes on the <td> element
+  @param {string} [params.rows[].classes] - Extra CSS classes on the <tr> element
+  @param {string} [params.rows[].id] - Row identifier for clickable-row events; falls back to loop index
+  @param {string} [params.maxHeight='400px'] - CSS max-height for the scrollable body
+  @param {Array}  [params.rowActions] - Action links appended as a final column; each has 'label' and 'url'
+  @param {boolean}[params.clickableRows=false] - Whether rows emit a Hyperscript event on click
+  @param {string} [params.rowClickEvent='rowClicked'] - Event name triggered on row click
+  @param {string} [params.emptyText='No data available'] - Text shown when rows is empty or absent
 
   Usage:
-  {% set headers = [
-    {'key': 'name', 'label': 'Name'},
-    {'key': 'email', 'label': 'Email'},
-    {'key': 'phone', 'label': 'Phone'}
+  {% from "jinja_ui_kit/components/table/macro.html" import sticky_header_table %}
+
+  {% set head = [
+    {'text': 'Name'},
+    {'text': 'Email'},
+    {'text': 'Actions', 'classes': 'text-right'}
   ] %}
 
-  {% from "table.html" import sticky_header_table %}
+  {% set rows = [] %}
+  {% for member in team_members %}
+    {% do rows.append({
+      'id': member.id,
+      'cells': [
+        {'text': member.name},
+        {'text': member.email},
+        {'text': member.role, 'classes': 'text-right'}
+      ]
+    }) %}
+  {% endfor %}
 
-  {{ sticky_header_table(
-    headers=headers,
-    data=team_members,
-    max_height='400px',
-    clickable_rows=true,
-    row_click_event='openModal'
-  ) }}
+  {{ sticky_header_table({
+    'head': head,
+    'rows': rows,
+    'maxHeight': '400px',
+    'clickableRows': true,
+    'rowClickEvent': 'openModal'
+  }) }}
+
+  Custom cell HTML (e.g. an avatar + name in the first column):
+  {% set avatar_html %}{{ avatar_macro(...) }}{% endset %}
+  {% do rows.append({'id': member.id, 'cells': [{'html': avatar_html}, ...]}) %}
 #}
-{% macro sticky_header_table(headers, data, max_height='400px', row_actions=None, clickable_rows=false, row_click_event='rowClicked', row_id_key='id') %}
+{% macro sticky_header_table(params) %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
 
-  <div class="overflow-hidden border border-gray-200 rounded-lg">
-    <div class="overflow-hidden">
-      <div class="overflow-y-auto" style="max-height: {{ max_height }}">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="sticky top-0 z-10 bg-gray-50">
+{%- set maxHeight     = params.maxHeight     if params.maxHeight     is defined else '400px' -%}
+{%- set rowActions    = params.rowActions    if params.rowActions    is defined else None -%}
+{%- set clickableRows = params.clickableRows if params.clickableRows is defined else false -%}
+{%- set rowClickEvent = params.rowClickEvent if params.rowClickEvent is defined else 'rowClicked' -%}
+{%- set emptyText     = params.emptyText     if params.emptyText     is defined else 'No data available' -%}
+
+<div class="overflow-hidden border border-gray-200">
+  <div class="overflow-hidden">
+    <div class="overflow-y-auto" style="max-height: {{ maxHeight }}">
+      <table class="min-w-full divide-y divide-gray-200">
+
+        {% if params.head %}
+        <thead class="sticky top-0 z-10 bg-gray-50">
+          <tr>
+            {% for item in params.head %}
+              <th scope="col"
+                  class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase{% if item.classes %} {{ item.classes }}{% endif %}"
+                  {{- attributes(item.attributes) if item.attributes -}}
+              >
+                {{- item.html | safe if item.html else item.text -}}
+              </th>
+            {% endfor %}
+            {% if rowActions %}
+              <th scope="col" class="relative px-6 py-3">
+                <span class="sr-only">Actions</span>
+              </th>
+            {% endif %}
+          </tr>
+        </thead>
+        {% endif %}
+
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% if not params.rows %}
             <tr>
-              {% for header in headers %}
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+              <td colspan="{{ (params.head | length if params.head else 1) + (1 if rowActions else 0) }}"
+                  class="px-6 py-3 text-sm text-center text-gray-500">
+                {{ emptyText }}
+              </td>
+            </tr>
+          {% endif %}
+          {% for row in params.rows %}
+            {%- set row_id = row.id if row.id is defined else loop.index -%}
+            <tr
+              id="row-{{ row_id }}"
+              class="{% if clickableRows %}cursor-pointer hover:bg-gray-50{% endif %}{% if row.classes %} {{ row.classes }}{% endif %}"
+              {% if clickableRows %}_="on click trigger {{ rowClickEvent }}(rowId:'{{ row_id }}')"{% endif %}
+            >
+              {% for cell in row.cells %}
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap{% if cell.classes %} {{ cell.classes }}{% endif %}"
+                    {{- attributes(cell.attributes) if cell.attributes -}}
                 >
-                  {{ header.label }}
-                </th>
+                  {{- cell.html | safe if cell.html else cell.text -}}
+                </td>
               {% endfor %}
-              {% if row_actions %}
-                <th scope="col" class="relative px-6 py-3">
-                  <span class="sr-only">Actions</span>
-                </th>
+              {% if rowActions %}
+                <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
+                  {% for action in rowActions %}
+                    <a href="{{ action.url }}"
+                       class="text-indigo-600 hover:text-indigo-900"
+                       _="on click stop propagation">
+                      {{ action.label }}
+                    </a>
+                    {% if not loop.last %} | {% endif %}
+                  {% endfor %}
+                </td>
               {% endif %}
             </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            {% if not data %}
-              <tr>
-                <td colspan="{{ headers|length + (1 if row_actions else 0) }}" class="px-6 py-4 text-sm text-center text-gray-500">
-                  No data available
-                </td>
-              </tr>
-            {% endif %}
-            {% for item in data %}
-              {% set row_id = item[row_id_key] %}
-              <tr
-                id="row-{{ row_id }}"
-                class="{% if clickable_rows %}cursor-pointer hover:bg-gray-50{% endif %}"
-                {% if clickable_rows %}
-                _="on click trigger {{ row_click_event }}(rowId:'{{ row_id }}')"
-                {% endif %}
-              >
-                {% for header in headers %}
-                  <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                    {{ item[header.key] }}
-                  </td>
-                {% endfor %}
-                {% if row_actions %}
-                  <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
-                    {% for action in row_actions %}
-                      <a
-                        href="{{ action.url }}"
-                        class="text-indigo-600 hover:text-indigo-900"
-                        _="on click stop propagation"
-                      >
-                        {{ action.label }}
-                      </a>
-                      {% if not loop.last %} | {% endif %}
-                    {% endfor %}
-                  </td>
-                {% endif %}
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+          {% endfor %}
+        </tbody>
+
+      </table>
     </div>
   </div>
+</div>
 
 {% endmacro %}
