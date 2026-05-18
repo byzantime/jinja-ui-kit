@@ -20,7 +20,7 @@
   @param {object} [params.rows[].cells[].attributes] - Extra HTML attributes on the <td> element
   @param {string} [params.rows[].classes] - Extra CSS classes on the <tr> element
   @param {string} [params.rows[].id] - Row identifier for clickable-row events; falls back to loop index
-  @param {string} [params.maxHeight='400px'] - CSS max-height for the scrollable body
+  @param {string} [params.maxHeight] - CSS max-height for the scrollable body; omit for no height limit
   @param {Array}  [params.rowActions] - Action links appended as a final column; each has 'label' and 'url'
   @param {boolean}[params.clickableRows=false] - Whether rows emit a Hyperscript event on click
   @param {string} [params.rowClickEvent='rowClicked'] - Event name triggered on row click
@@ -62,7 +62,7 @@
 {% macro sticky_header_table(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
 
-{%- set maxHeight     = params.maxHeight     if params.maxHeight     is defined else '400px' -%}
+{%- set maxHeight     = params.maxHeight     if params.maxHeight     is defined else None -%}
 {%- set rowActions    = params.rowActions    if params.rowActions    is defined else None -%}
 {%- set clickableRows = params.clickableRows if params.clickableRows is defined else false -%}
 {%- set rowClickEvent = params.rowClickEvent if params.rowClickEvent is defined else 'rowClicked' -%}
@@ -70,7 +70,7 @@
 
 <div class="overflow-hidden border border-gray-200">
   <div class="overflow-hidden">
-    <div class="overflow-y-auto" style="max-height: {{ maxHeight }}">
+    <div{% if maxHeight %} class="overflow-y-auto" style="max-height: {{ maxHeight }}"{% endif %}>
       <table class="min-w-full divide-y divide-gray-200">
 
         {% if params.head %}
