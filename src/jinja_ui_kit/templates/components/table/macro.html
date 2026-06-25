@@ -68,9 +68,8 @@
 {%- set rowClickEvent = params.rowClickEvent if params.rowClickEvent is defined else 'rowClicked' -%}
 {%- set emptyText     = params.emptyText     if params.emptyText     is defined else 'No data available' -%}
 
-<div class="overflow-hidden border border-gray-200">
-  <div class="overflow-hidden">
-    <div{% if maxHeight %} class="overflow-y-auto" style="max-height: {{ maxHeight }}"{% endif %}>
+<div class="overflow-x-auto border border-gray-200">
+  <div{% if maxHeight %} class="overflow-y-auto" style="max-height: {{ maxHeight }}"{% endif %}>
       <table class="min-w-full divide-y divide-gray-200">
 
         {% if params.head %}
@@ -133,7 +132,6 @@
         </tbody>
 
       </table>
-    </div>
   </div>
 </div>
 
