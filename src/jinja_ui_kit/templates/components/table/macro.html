@@ -136,3 +136,113 @@
 </div>
 
 {% endmacro %}
+
+{#
+  Table Macro
+  Renders a responsive table with horizontal scroll on narrow viewports.
+
+  Compatible with GOV.UK Frontend Jinja params convention.
+
+  @param {object} params - Configuration object
+  @param {string} [params.caption]           - Optional caption text
+  @param {string} [params.captionClasses]    - Extra CSS classes on the <caption> element
+  @param {Array}  [params.head]              - List of column header objects
+  @param {string} [params.head[].text]       - Header cell text content
+  @param {string} [params.head[].html]       - Header cell HTML (takes precedence over text)
+  @param {string} [params.head[].classes]    - Extra CSS classes on the <th> element
+  @param {string} [params.head[].format]     - "numeric" right-aligns the column
+  @param {number} [params.head[].colspan]    - colspan attribute on the <th> element
+  @param {number} [params.head[].rowspan]    - rowspan attribute on the <th> element
+  @param {object} [params.head[].attributes] - Extra HTML attributes on the <th> element
+  @param {string} [params.classes]           - Extra CSS classes on the <table> element
+  @param {string} [params.id]                - Optional id attribute on the <table> element
+  @param {object} [params.attributes]        - Extra HTML attributes on the <table> element
+  @param {boolean}[params.firstCellIsHeader] - Render first cell of each row as <th scope="row">
+  @param {Array}  params.rows                - List of row objects (required)
+  @param {Array}  params.rows[].cells        - List of cell objects for the row
+  @param {string} [params.rows[].cells[].text]       - Cell text content
+  @param {string} [params.rows[].cells[].html]       - Cell HTML (takes precedence over text)
+  @param {string} [params.rows[].cells[].classes]    - Extra CSS classes on the <td> element
+  @param {string} [params.rows[].cells[].format]     - "numeric" right-aligns the cell
+  @param {number} [params.rows[].cells[].colspan]    - colspan attribute on the <td> element
+  @param {number} [params.rows[].cells[].rowspan]    - rowspan attribute on the <td> element
+  @param {object} [params.rows[].cells[].attributes] - Extra HTML attributes on the <td> element
+  @param {string} [params.rows[].classes]    - Extra CSS classes on the <tr> element
+  @param {object} [params.rows[].attributes] - Extra HTML attributes on the <tr> element (e.g. onclick)
+  @param {string} [params.emptyText]         - Shown when rows is empty (default "No data available")
+
+  Usage:
+  {% from "jinja_ui_kit/components/table/macro.html" import table %}
+
+  {% set rows = [] %}
+  {% for item in items %}
+    {% do rows.append({
+      'cells': [
+        {'text': item.name},
+        {'text': item.value, 'format': 'numeric'}
+      ],
+      'classes': 'hover:bg-gray-50'
+    }) %}
+  {% endfor %}
+
+  {{ table({'head': [{'text': 'Name'}, {'text': 'Amount', 'format': 'numeric'}], 'rows': rows}) }}
+#}
+{% macro table(params) %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{%- set emptyText = params.emptyText if params.emptyText is defined else 'No data available' -%}
+
+<div class="overflow-x-auto border border-gray-200 rounded-lg">
+  <table {% if params.id %}id="{{ params.id }}"{% endif %}
+    class="min-w-full divide-y divide-gray-200{% if params.classes %} {{ params.classes }}{% endif %}"
+    {% if params.attributes %}{{ attributes(params.attributes) }}{% endif %}>
+    {% if params.caption %}
+    <caption class="px-4 py-2 text-sm font-medium text-left text-gray-700{% if params.captionClasses %} {{ params.captionClasses }}{% endif %}">
+      {{- params.caption -}}</caption>
+    {% endif %}
+    {% if params.head %}
+    <thead class="bg-gray-50"><tr>
+      {% for col in params.head %}
+        {% set col_align = ' text-right' if col.format == 'numeric' else ' text-left' %}
+        <th scope="col"
+            class="px-4 py-3 text-xs font-medium tracking-wider text-gray-500 uppercase{{ col_align }}{% if col.classes %} {{ col.classes }}{% endif %}"
+            {%- if col.colspan %} colspan="{{ col.colspan }}"{% endif %}
+            {%- if col.rowspan %} rowspan="{{ col.rowspan }}"{% endif %}
+            {{- attributes(col.attributes) if col.attributes -}}>
+          {{- col.html | safe if col.html else col.text -}}
+        </th>
+      {% endfor %}
+    </tr></thead>
+    {% endif %}
+    <tbody class="bg-white divide-y divide-gray-200">
+      {% if not params.rows %}
+        <tr><td colspan="{{ params.head | length if params.head else 1 }}"
+            class="px-4 py-3 text-sm text-center text-gray-500">{{ emptyText }}</td></tr>
+      {% endif %}
+      {% for row in params.rows %}
+        <tr{% if row.classes %} class="{{ row.classes }}"{% endif %}
+            {{- attributes(row.attributes) if row.attributes -}}>
+          {% for cell in row.cells %}
+            {% if loop.first and params.firstCellIsHeader %}
+            <th scope="row"
+                class="px-4 py-3 text-sm font-medium text-gray-900{% if cell.classes %} {{ cell.classes }}{% endif %}"
+                {%- if cell.colspan %} colspan="{{ cell.colspan }}"{% endif %}
+                {%- if cell.rowspan %} rowspan="{{ cell.rowspan }}"{% endif %}
+                {{- attributes(cell.attributes) if cell.attributes -}}>
+              {{- cell.html | safe if cell.html else cell.text -}}
+            </th>
+            {% else %}
+            {% set cell_align = ' text-right' if cell.format == 'numeric' else '' %}
+            <td class="px-4 py-3 text-sm{{ cell_align }}{% if cell.classes %} {{ cell.classes }}{% endif %}"
+                {%- if cell.colspan %} colspan="{{ cell.colspan }}"{% endif %}
+                {%- if cell.rowspan %} rowspan="{{ cell.rowspan }}"{% endif %}
+                {{- attributes(cell.attributes) if cell.attributes -}}>
+              {{- cell.html | safe if cell.html else cell.text -}}
+            </td>
+            {% endif %}
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
