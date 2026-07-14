@@ -9,7 +9,8 @@
   @param {string} [params.subtitle] - Header subtitle text
   @param {string} [params.subtitleHtml] - Header subtitle HTML (takes precedence over subtitle)
   @param {string} [params.icon] - HTML string rendered in a rounded icon container in the header
-  @param {string} [params.size='lg'] - Content panel width: 'sm' (max-w-md), 'lg' (max-w-4xl), 'xl' (max-w-6xl)
+  @param {string} [params.size='lg'] - Content panel width: 'sm' (max-w-md), 'lg' (max-w-4xl), 'xl' (max-w-6xl), '2xl' (max-w-[90vw]), 'fullscreen' (w-[98vw]; defaults max-height to 98vh)
+  @param {string} [params.maxHeight] - CSS value for max-height on the content panel (default: '98vh' when size='fullscreen', '90vh' otherwise). E.g. '600px', '80vh'.
   @param {boolean} [params.autoOpen=false] - Start the modal visible (flex) instead of hidden
   @param {boolean} [params.showCloseButton=true] - Render a close (✕) button in the header
   @param {boolean} [params.enableKeyboardClose=true] - Close on Escape key
@@ -59,11 +60,15 @@
 {%- set bodyClasses = params.bodyClasses if params.bodyClasses is defined else "" -%}
 {%- set footerHtml = params.footerHtml if params.footerHtml is defined else "" -%}
 {%- set footerClasses = params.footerClasses if params.footerClasses is defined else "" -%}
+{%- set maxHeight = params.maxHeight if params.maxHeight is defined and params.maxHeight
+    else ('98vh' if size == 'fullscreen' else '90vh') -%}
 
 {%- set size_classes = {
     'sm': 'max-w-md',
     'lg': 'max-w-4xl',
-    'xl': 'max-w-6xl'
+    'xl': 'max-w-6xl',
+    '2xl': 'max-w-[90vw]',
+    'fullscreen': 'w-[98vw]'
 } -%}
 {%- set sizeClass = size_classes[size] if size in size_classes else 'max-w-4xl' -%}
 
@@ -90,7 +95,8 @@
   <!-- Modal Content -->
   <div
     id="{{ id }}-content"
-    class="relative z-50 flex flex-col w-full {{ sizeClass }} mx-4 bg-white rounded-2xl shadow-2xl max-h-[90vh]{{ ' ' ~ customClasses if customClasses }}"
+    class="relative z-50 flex flex-col w-full {{ sizeClass }} mx-4 bg-white rounded-2xl shadow-2xl{{ ' ' ~ customClasses if customClasses }}"
+    style="max-height: {{ maxHeight }}"
     _="on click halt bubbling">
 
     {% if hasHeader %}
