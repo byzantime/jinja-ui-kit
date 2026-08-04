@@ -9,7 +9,7 @@
   @param {string} [params.subtitle] - Header subtitle text
   @param {string} [params.subtitleHtml] - Header subtitle HTML (takes precedence over subtitle)
   @param {string} [params.icon] - HTML string rendered in a rounded icon container in the header
-  @param {string} [params.size='lg'] - Content panel width: 'sm' (max-w-md), 'lg' (max-w-4xl), 'xl' (max-w-6xl), '2xl' (max-w-[90vw]), 'fullscreen' (w-[98vw]; defaults max-height to 98vh)
+  @param {string} [params.size='lg'] - Content panel width: 'sm' (max-w-md), 'lg' (max-w-4xl), 'xl' (max-w-6xl), '2xl' (max-w-[90vw]), 'fullscreen' (w-[98vw]; height and max-height default to 98vh)
   @param {string} [params.maxHeight] - CSS value for max-height on the content panel (default: '98vh' when size='fullscreen', '90vh' otherwise). E.g. '600px', '80vh'.
   @param {boolean} [params.autoOpen=false] - Start the modal visible (flex) instead of hidden
   @param {boolean} [params.showCloseButton=true] - Render a close (✕) button in the header
@@ -96,7 +96,7 @@
   <div
     id="{{ id }}-content"
     class="relative z-50 flex flex-col w-full {{ sizeClass }} mx-4 bg-white rounded-2xl shadow-2xl{{ ' ' ~ customClasses if customClasses }}"
-    style="max-height: {{ maxHeight }}"
+    style="max-height: {{ maxHeight }}{% if size == 'fullscreen' %}; height: 98vh{% endif %}"
     _="on click halt bubbling">
 
     {% if hasHeader %}
