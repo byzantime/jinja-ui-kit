@@ -1,0 +1,161 @@
+{#
+  Renders a date input component: a group of separate day, month and year
+  inputs, matching the API of govuk-frontend-jinja's govukDateInput.
+
+  @param {object} params - Configuration object for the date input
+  @param {string} [params.id] - ID prefix for the group container (defaults to namePrefix)
+  @param {string} [params.namePrefix] - Prefix applied to each input's name (e.g. 'dob' -> 'dob-day')
+  @param {array} [params.items] - Array of input configurations (defaults to Day/Month/Year)
+  @param {object} [params.hint] - Hint configuration for the group
+  @param {object} [params.errorMessage] - Error message configuration
+  @param {object} [params.fieldset] - Fieldset wrapper with legend and describedBy
+  @param {object} [params.formGroup] - Form group wrapper (beforeInputs/afterInputs, classes, attributes)
+  @param {string} [params.classes] - Additional classes on the inputs container
+  @param {object} [params.attributes] - Additional HTML attributes on the inputs container
+
+  Item structure:
+  @param {object} item.label - Label configuration ('text')
+  @param {string} item.name - Name suffix, combined with namePrefix (required)
+  @param {string} [item.id] - ID attribute (defaults to id-name)
+  @param {string} [item.classes] - Additional CSS classes for the input
+  @param {string} [item.value] - Input value
+  @param {string} [item.inputmode='numeric'] - inputmode attribute
+  @param {string} [item.autocomplete] - autocomplete attribute
+  @param {string} [item.pattern] - pattern attribute
+  @param {object} [item.attributes] - Additional HTML attributes for this input
+
+  Examples:
+  {% from "jinja_ui_kit/components/date-input/macro.html" import dateInput %}
+
+  Date of birth:
+  {{ dateInput({
+    'namePrefix': 'dob',
+    'fieldset': {
+      'legend': {
+        'text': 'Date of birth'
+      }
+    },
+    'hint': {
+      'text': 'For example, 27 3 2007'
+    }
+  }) }}
+#}
+{% macro dateInput(params) %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
+{% from "jinja_ui_kit/components/hint/macro.html" import hint %}
+{% from "jinja_ui_kit/components/label/macro.html" import label %}
+{% from "jinja_ui_kit/components/fieldset/macro.html" import fieldset %}
+
+{%- set id = params.id if params.id else params.namePrefix -%}
+{%- set items = params.get('items') or [
+  {'label': {'text': 'Day'}, 'name': 'day'},
+  {'label': {'text': 'Month'}, 'name': 'month'},
+  {'label': {'text': 'Year'}, 'name': 'year'}
+] -%}
+
+{#- Build up aria-describedby from the fieldset, hint and error message. This is
+  computed before rendering so it can be applied to both the fieldset and each
+  input, regardless of Jinja block-set scoping. -#}
+{%- set hasHint = true if params.hint and (params.hint.text or params.hint.html) else false -%}
+{%- set hintId = id ~ '-hint' -%}
+{%- set errorId = id ~ '-error' -%}
+{%- set describedBy = params.fieldset.describedBy if params.fieldset and params.fieldset.describedBy else undefined -%}
+{%- set describedBy = (describedBy ~ ' ' ~ hintId if describedBy else hintId) if hasHint else describedBy -%}
+{%- set describedBy = (describedBy ~ ' ' ~ errorId if describedBy else errorId) if params.errorMessage else describedBy -%}
+
+{%- set outerHtml %}
+<div class="form-group {%- if params.errorMessage %} form-group--error{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"
+  {{- attributes(params.formGroup.attributes if params.formGroup) }}>
+
+  {% if hasHint %}
+    {{ hint({
+      'id': hintId,
+      'classes': "text-gray-600 mb-4" ~ (' ' ~ params.hint.classes if params.hint and params.hint.classes else ""),
+      'attributes': params.hint.attributes if params.hint,
+      'html': params.hint.html,
+      'text': params.hint.text
+    }) | trim }}
+  {% endif %}
+
+  {% if params.errorMessage %}
+    {{ errorMessage({
+      'id': errorId,
+      'classes': "text-red-600 mb-4" ~ (' ' ~ params.errorMessage.classes if params.errorMessage and params.errorMessage.classes else ""),
+      'attributes': params.errorMessage.attributes if params.errorMessage,
+      'html': params.errorMessage.html,
+      'text': params.errorMessage.text,
+      'visuallyHiddenText': params.errorMessage.visuallyHiddenText
+    }) | trim }}
+  {% endif %}
+
+  {% if params.formGroup and params.formGroup.beforeInputs and (params.formGroup.beforeInputs.text or params.formGroup.beforeInputs.html) %}
+    {{- params.formGroup.beforeInputs.html | safe | trim if params.formGroup.beforeInputs.html else params.formGroup.beforeInputs.text }}
+  {% endif %}
+
+  <div class="flex gap-4 {{ params.classes }}"
+    {{- attributes(params.attributes) }}>
+    {% for item in items %}
+      {%- set itemId = item.id if item.id else id ~ '-' ~ item.name -%}
+      {%- set itemName = params.namePrefix ~ '-' ~ item.name if params.namePrefix else item.name -%}
+      {%- set widthClass = "w-24" if item.name == 'year' else "w-16" -%}
+      <div>
+        {{ label({
+          'text': item.label.text if item.label,
+          'html': item.label.html if item.label,
+          'classes': "block font-medium text-gray-900 mb-1" ~ (' ' ~ item.label.classes if item.label and item.label.classes else ""),
+          'attributes': item.label.attributes if item.label,
+          'for': itemId
+        }) | trim }}
+        <input
+          {{- attributes({
+            'class': widthClass ~ " border-2 border-gray-900 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none" ~ (' ' ~ item.classes if item.classes else ""),
+            'id': itemId,
+            'name': itemName,
+            'type': 'text',
+            'value': {
+              'value': item.value,
+              'optional': true
+            },
+            'inputmode': item.inputmode | default('numeric', true),
+            'autocomplete': {
+              'value': item.autocomplete,
+              'optional': true
+            },
+            'pattern': {
+              'value': item.pattern,
+              'optional': true
+            },
+            'aria-describedby': {
+              'value': describedBy,
+              'optional': true
+            }
+          }) -}}
+          {{- attributes(item.attributes) }}>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if params.formGroup and params.formGroup.afterInputs and (params.formGroup.afterInputs.text or params.formGroup.afterInputs.html) %}
+    {{- params.formGroup.afterInputs.html | safe | trim if params.formGroup.afterInputs.html else params.formGroup.afterInputs.text }}
+  {% endif %}
+</div>
+{%- endset %}
+
+{% if params.fieldset %}
+  {{ fieldset({
+    'legend': params.fieldset.legend,
+    'classes': params.fieldset.classes,
+    'attributes': attributes({
+      'role': 'group',
+      'aria-describedby': {
+        'value': describedBy,
+        'optional': true
+      }
+    }) ~ attributes(params.fieldset.attributes),
+    'html': outerHtml | trim
+  }) | trim }}
+{% else %}
+  {{ outerHtml | trim }}
+{% endif %}
+{% endmacro %}

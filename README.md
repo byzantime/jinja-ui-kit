@@ -131,6 +131,7 @@ Import components in your Jinja2 templates:
 - **Select** - Dropdown select inputs
 - **Checkboxes** - Multiple checkbox inputs with proper labeling and conditional reveal support
 - **Radios** - Radio button groups with proper labeling and conditional reveal support
+- **Date Input** - Three-part day/month/year date entry with fieldset, hint and error support
 - **File Upload** - File input with drag-and-drop styling
 
 ### UI Components
