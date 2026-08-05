@@ -68,16 +68,16 @@
 {%- set rowClickEvent = params.rowClickEvent if params.rowClickEvent is defined else 'rowClicked' -%}
 {%- set emptyText     = params.emptyText     if params.emptyText     is defined else 'No data available' -%}
 
-<div class="overflow-x-auto border border-gray-200">
+<div class="overflow-x-auto border border-neutral-200">
   <div{% if maxHeight %} class="overflow-y-auto" style="max-height: {{ maxHeight }}"{% endif %}>
-      <table class="min-w-full divide-y divide-gray-200">
+      <table class="min-w-full divide-y divide-neutral-200">
 
         {% if params.head %}
-        <thead class="sticky top-0 z-10 bg-gray-50">
+        <thead class="sticky top-0 z-10 bg-neutral-50">
           <tr>
             {% for item in params.head %}
               <th scope="col"
-                  class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase{% if item.classes %} {{ item.classes }}{% endif %}"
+                  class="px-6 py-3 text-xs font-medium tracking-wider text-left text-neutral-500 uppercase{% if item.classes %} {{ item.classes }}{% endif %}"
                   {{- attributes(item.attributes) if item.attributes -}}
               >
                 {{- item.html | safe if item.html else item.text -}}
@@ -92,11 +92,11 @@
         </thead>
         {% endif %}
 
-        <tbody class="bg-white divide-y divide-gray-200">
+        <tbody class="bg-white divide-y divide-neutral-200">
           {% if not params.rows %}
             <tr>
               <td colspan="{{ (params.head | length if params.head else 1) + (1 if rowActions else 0) }}"
-                  class="px-6 py-3 text-sm text-center text-gray-500">
+                  class="px-6 py-3 text-sm text-center text-neutral-500">
                 {{ emptyText }}
               </td>
             </tr>
@@ -105,11 +105,11 @@
             {%- set row_id = row.id if row.id is defined else loop.index -%}
             <tr
               id="row-{{ row_id }}"
-              class="{% if clickableRows %}cursor-pointer hover:bg-gray-50{% endif %}{% if row.classes %} {{ row.classes }}{% endif %}"
+              class="{% if clickableRows %}cursor-pointer hover:bg-neutral-50{% endif %}{% if row.classes %} {{ row.classes }}{% endif %}"
               {% if clickableRows %}_="on click trigger {{ rowClickEvent }}(rowId:'{{ row_id }}')"{% endif %}
             >
               {% for cell in row.cells %}
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap{% if cell.classes %} {{ cell.classes }}{% endif %}"
+                <td class="px-6 py-4 text-sm text-neutral-500 whitespace-nowrap{% if cell.classes %} {{ cell.classes }}{% endif %}"
                     {{- attributes(cell.attributes) if cell.attributes -}}
                 >
                   {{- cell.html | safe if cell.html else cell.text -}}
@@ -119,7 +119,7 @@
                 <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
                   {% for action in rowActions %}
                     <a href="{{ action.url }}"
-                       class="text-indigo-600 hover:text-indigo-900"
+                       class="text-primary-600 hover:text-primary-900"
                        _="on click stop propagation">
                       {{ action.label }}
                     </a>
@@ -181,7 +181,7 @@
         {'text': item.name},
         {'text': item.value, 'format': 'numeric'}
       ],
-      'classes': 'hover:bg-gray-50'
+      'classes': 'hover:bg-neutral-50'
     }) %}
   {% endfor %}
 
@@ -191,20 +191,20 @@
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
 {%- set emptyText = params.emptyText if params.emptyText is defined else 'No data available' -%}
 
-<div class="overflow-x-auto border border-gray-200 rounded-lg">
+<div class="overflow-x-auto border border-neutral-200 rounded-lg">
   <table {% if params.id %}id="{{ params.id }}"{% endif %}
-    class="min-w-full divide-y divide-gray-200{% if params.classes %} {{ params.classes }}{% endif %}"
+    class="min-w-full divide-y divide-neutral-200{% if params.classes %} {{ params.classes }}{% endif %}"
     {% if params.attributes %}{{ attributes(params.attributes) }}{% endif %}>
     {% if params.caption %}
-    <caption class="px-4 py-2 text-sm font-medium text-left text-gray-700{% if params.captionClasses %} {{ params.captionClasses }}{% endif %}">
+    <caption class="px-4 py-2 text-sm font-medium text-left text-neutral-700{% if params.captionClasses %} {{ params.captionClasses }}{% endif %}">
       {{- params.caption -}}</caption>
     {% endif %}
     {% if params.head %}
-    <thead class="bg-gray-50"><tr>
+    <thead class="bg-neutral-50"><tr>
       {% for col in params.head %}
         {% set col_align = ' text-right' if col.format == 'numeric' else ' text-left' %}
         <th scope="col"
-            class="px-4 py-3 text-xs font-medium tracking-wider text-gray-500 uppercase{{ col_align }}{% if col.classes %} {{ col.classes }}{% endif %}"
+            class="px-4 py-3 text-xs font-medium tracking-wider text-neutral-500 uppercase{{ col_align }}{% if col.classes %} {{ col.classes }}{% endif %}"
             {%- if col.colspan %} colspan="{{ col.colspan }}"{% endif %}
             {%- if col.rowspan %} rowspan="{{ col.rowspan }}"{% endif %}
             {{- attributes(col.attributes) if col.attributes -}}>
@@ -213,10 +213,10 @@
       {% endfor %}
     </tr></thead>
     {% endif %}
-    <tbody class="bg-white divide-y divide-gray-200">
+    <tbody class="bg-white divide-y divide-neutral-200">
       {% if not params.rows %}
         <tr><td colspan="{{ params.head | length if params.head else 1 }}"
-            class="px-4 py-3 text-sm text-center text-gray-500">{{ emptyText }}</td></tr>
+            class="px-4 py-3 text-sm text-center text-neutral-500">{{ emptyText }}</td></tr>
       {% endif %}
       {% for row in params.rows %}
         <tr{% if row.classes %} class="{{ row.classes }}"{% endif %}
@@ -224,7 +224,7 @@
           {% for cell in row.cells %}
             {% if loop.first and params.firstCellIsHeader %}
             <th scope="row"
-                class="px-4 py-3 text-sm font-medium text-gray-900{% if cell.classes %} {{ cell.classes }}{% endif %}"
+                class="px-4 py-3 text-sm font-medium text-neutral-900{% if cell.classes %} {{ cell.classes }}{% endif %}"
                 {%- if cell.colspan %} colspan="{{ cell.colspan }}"{% endif %}
                 {%- if cell.rowspan %} rowspan="{{ cell.rowspan }}"{% endif %}
                 {{- attributes(cell.attributes) if cell.attributes -}}>

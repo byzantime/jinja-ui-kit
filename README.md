@@ -272,6 +272,56 @@ Import components in your Jinja2 templates:
 tailwindcss -i ./src/styles/input.css -o ./src/jinja_ui_kit/dist/jinja-ui-kit.min.css --minify
 ```
 
+## Theming
+
+Components don't reference raw Tailwind palette classes (`blue-600`, `red-600`, etc.) directly. Instead they use a small set of semantic color tokens defined in this package's `tailwind.config.js`:
+
+| Token | Default palette | Used for |
+|---|---|---|
+| `primary` | `blue` | Primary buttons, links, focus rings |
+| `danger` | `red` | Errors, warning buttons |
+| `success` | `green` | Start/success buttons |
+| `neutral` | `gray` | Borders, backgrounds, secondary text |
+
+Each token supports the full `50`–`900` shade scale (e.g. `bg-primary-600`, `text-primary-700`), matching how you'd use any built-in Tailwind color.
+
+**If your project uses Tailwind CSS** (see [Include CSS Styles](#2-include-css-styles) above), you already share jinja-ui-kit's template content with your own Tailwind build. To restyle jinja-ui-kit's components, add or override these token names in your own `tailwind.config.js` — no changes to jinja-ui-kit's Python or templates are needed, since only content globs are shared, not jinja-ui-kit's theme:
+
+```js
+// your app's tailwind.config.js
+module.exports = {
+  content: [
+    "./src/templates/**/*.html",
+    ...kitContent, // jinja-ui-kit's templates, from the content-glob shim
+  ],
+  theme: {
+    extend: {
+      colors: {
+        // Override jinja-ui-kit's "primary" token with your brand color,
+        // using the same 50-900 shade scale.
+        primary: {
+          50: '#faf5ff',
+          100: '#f3e8ff',
+          200: '#e9d5ff',
+          300: '#d8b4fe',
+          400: '#c084fc',
+          500: '#a855f7',
+          600: '#9333ea',
+          700: '#7e22ce',
+          800: '#6b21a8',
+          900: '#581c87',
+        },
+        // danger, success, and neutral can be overridden the same way
+      },
+    },
+  },
+};
+```
+
+Because Tailwind compiles utility classes on demand from your build's content scan, overriding `primary` here changes the color of every `bg-primary-*`/`text-primary-*`/`border-primary-*`/`ring-primary-*` class jinja-ui-kit's templates use — including buttons, focus rings, and links — without touching Tailwind's own `blue` palette or repainting unrelated uses of blue elsewhere in your app.
+
+**If your project does not use Tailwind CSS**, you're using jinja-ui-kit's pre-compiled `jinja-ui-kit.min.css`, which ships with the default palette baked in. Overriding the token colors requires forking or patching that build (see [Development](#development) above) rather than a config change.
+
 ## Design Philosophy
 
 This library follows the GOV.UK Frontend approach of:

@@ -33,14 +33,14 @@
 {% from "jinja_ui_kit/components/label/macro.html" import label %}
 
 {#- Set classes for this component #}
-{%- set classNames = "w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y font-mono" -%}
+{%- set classNames = "w-full px-3 py-2 text-sm border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y font-mono" -%}
 
 {%- if params.classes %}
   {% set classNames = classNames ~ " " ~ params.classes %}
 {% endif %}
 
 {%- if params.errorMessage %}
-  {% set classNames = classNames ~ " border-red-500 focus:ring-red-500" %}
+  {% set classNames = classNames ~ " border-danger-500 focus:ring-danger-500" %}
 {% endif %}
 
 {#- a record of other elements that we need to associate with the textarea using

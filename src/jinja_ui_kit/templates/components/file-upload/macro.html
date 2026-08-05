@@ -54,18 +54,18 @@
 {%- set id = params.id if params.id else params.name -%}
 
 {#- Set classes for this component #}
-{%- set classNames = "w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer" -%}
+{%- set classNames = "w-full px-3 py-2 text-sm border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 file:cursor-pointer" -%}
 
 {%- if params.classes %}
   {% set classNames = classNames ~ " " ~ params.classes %}
 {% endif %}
 
 {%- if params.errorMessage %}
-  {% set classNames = classNames ~ " border-red-500 focus:ring-red-500" %}
+  {% set classNames = classNames ~ " border-danger-500 focus:ring-danger-500" %}
 {% endif %}
 
 {%- if params.disabled %}
-  {% set classNames = classNames ~ " bg-gray-50 text-gray-500 cursor-not-allowed file:bg-gray-100 file:text-gray-500 file:cursor-not-allowed" %}
+  {% set classNames = classNames ~ " bg-neutral-50 text-neutral-500 cursor-not-allowed file:bg-neutral-100 file:text-neutral-500 file:cursor-not-allowed" %}
 {% endif %}
 
 {%- set hasBeforeInput = true if params.formGroup and params.formGroup.beforeInput and (params.formGroup.beforeInput.text or params.formGroup.beforeInput.html) else false %}

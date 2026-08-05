@@ -17,7 +17,7 @@
     {{ errorMessage({
       html: '<strong>Invalid</strong> date format',
       visuallyHiddenText: 'Form error',
-      classes: 'text-red'
+      classes: 'text-danger-700'
     }) }}
 
     Error with ID and attributes:
@@ -33,7 +33,7 @@
 {% set visuallyHiddenText = params.visuallyHiddenText | default("Error") -%}
 {% set errorMessageText = params.html | safe | trim | indent(2) if params.html else params.text -%}
 
-<p {%- if params.id %} id="{{ params.id }}"{% endif %} class="text-red-700 {%- if params.classes %} {{ params.classes }}{% endif %}"
+<p {%- if params.id %} id="{{ params.id }}"{% endif %} class="text-danger-700 {%- if params.classes %} {{ params.classes }}{% endif %}"
   {{- attributes(params.attributes) }}>
   {% if visuallyHiddenText %}
   <span class="sr-only">{{ visuallyHiddenText }}:</span> {{ errorMessageText }}

@@ -80,7 +80,7 @@
 {%- set hasFieldset = true if params.fieldset else false %}
 {%- set hasHint = true if params.hint and (params.hint.text or params.hint.html) else false %}
 {%- set checkboxClasses = "h-6 w-6" if params.size == "small" else "h-8 w-8" %}
-{%- set checkboxClasses = checkboxClasses ~ " rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" %}
+{%- set checkboxClasses = checkboxClasses ~ " rounded border-2 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" %}
 
 {%- set outerHtml %}
 <div class="space-y-4 {%- if params.errorMessage %} mb-6{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"
@@ -91,7 +91,7 @@
     {% set describedBy = describedBy ~ ' ' ~ hintId if describedBy else hintId %}
     {{ hint({
       'id': hintId,
-      'classes': "text-gray-600 mb-4" ~ (' ' ~ params.hint.classes if params.hint and params.hint.classes else ""),
+      'classes': "text-neutral-600 mb-4" ~ (' ' ~ params.hint.classes if params.hint and params.hint.classes else ""),
       'attributes': params.hint.attributes if params.hint,
       'html': params.hint.html,
       'text': params.hint.text
@@ -103,7 +103,7 @@
     {% set describedBy = describedBy ~ ' ' ~ errorId if describedBy else errorId %}
     {{ errorMessage({
       'id': errorId,
-      'classes': "text-red-600 mb-4" ~ (' ' ~ params.errorMessage.classes if params.errorMessage and params.errorMessage.classes else ""),
+      'classes': "text-danger-600 mb-4" ~ (' ' ~ params.errorMessage.classes if params.errorMessage and params.errorMessage.classes else ""),
       'attributes': params.errorMessage.attributes if params.errorMessage,
       'html': params.errorMessage.html,
       'text': params.errorMessage.text,
@@ -157,7 +157,7 @@
             {{ label({
               'html': item.html,
               'text': item.text,
-              'classes': "font-medium text-gray-900" ~ (' ' ~ item.label.classes if item.label and item.label.classes else ""),
+              'classes': "font-medium text-neutral-900" ~ (' ' ~ item.label.classes if item.label and item.label.classes else ""),
               'attributes': item.label.attributes if item.label,
               'for': itemId
             }) | trim }}
@@ -166,7 +166,7 @@
               {% set itemHintId = itemId ~ '-hint' %}
               {{ hint({
                 'id': itemHintId,
-                'classes': "text-gray-600 mt-1" ~ (' ' ~ item.hint.classes if item.hint and item.hint.classes else ""),
+                'classes': "text-neutral-600 mt-1" ~ (' ' ~ item.hint.classes if item.hint and item.hint.classes else ""),
                 'attributes': item.hint.attributes if item.hint,
                 'html': item.hint.html,
                 'text': item.hint.text

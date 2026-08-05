@@ -60,20 +60,20 @@
 {#- Set variant-specific classes -#}
 {% set variant = params.variant | default('primary') %}
 {% if variant == 'primary' %}
-  {% set variantClasses = "border-transparent text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500" %}
+  {% set variantClasses = "border-transparent text-white bg-primary-600 hover:bg-primary-700 focus:ring-primary-500" %}
 {% elif variant == 'secondary' %}
-  {% set variantClasses = "border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-blue-500" %}
+  {% set variantClasses = "border-neutral-300 text-neutral-700 bg-white hover:bg-neutral-50 focus:ring-primary-500" %}
 {% elif variant == 'warning' %}
-  {% set variantClasses = "border-transparent text-white bg-red-600 hover:bg-red-700 focus:ring-red-500" %}
+  {% set variantClasses = "border-transparent text-white bg-danger-600 hover:bg-danger-700 focus:ring-danger-500" %}
 {% elif variant == 'inverse' %}
-  {% set variantClasses = "border-gray-300 text-gray-900 bg-white hover:bg-gray-50 focus:ring-blue-500" %}
+  {% set variantClasses = "border-neutral-300 text-neutral-900 bg-white hover:bg-neutral-50 focus:ring-primary-500" %}
 {% else %}
-  {% set variantClasses = "border-transparent text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500" %}
+  {% set variantClasses = "border-transparent text-white bg-primary-600 hover:bg-primary-700 focus:ring-primary-500" %}
 {% endif %}
 
 {#- Add start button specific classes -#}
 {% if params.isStart %}
-  {% set variantClasses = "border-transparent text-white bg-green-600 hover:bg-green-700 focus:ring-green-500" %}
+  {% set variantClasses = "border-transparent text-white bg-success-600 hover:bg-success-700 focus:ring-success-500" %}
   {% set baseClasses = baseClasses ~ " pr-6" %}
 {% endif %}
 

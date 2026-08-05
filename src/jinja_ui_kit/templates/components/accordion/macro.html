@@ -49,10 +49,10 @@
      {% set is_open = default_open is sameas true or (default_open is not sameas false and loop.index0 == default_open) %}
    {% endif %}
 
-   <div class="overflow-hidden border border-gray-200 rounded-lg">
+   <div class="overflow-hidden border border-neutral-200 rounded-lg">
      <button
        id="{{ section_id }}-header"
-       class="flex items-center justify-between w-full {{ 'py-2 px-3' if compact else 'p-4' }} font-medium text-left bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-300"
+       class="flex items-center justify-between w-full {{ 'py-2 px-3' if compact else 'p-4' }} font-medium text-left bg-neutral-50 hover:bg-neutral-100 focus:outline-none focus:ring-1 focus:ring-primary-300"
        aria-expanded="{{ 'true' if is_open else 'false' }}"
        aria-controls="{{ content_id }}"
        _="on click or toggle_accordion

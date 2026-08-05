@@ -29,7 +29,7 @@
   {{- attributes(params.attributes) }}>
 
   {% if params.legend %}
-    <legend class="text-lg font-semibold text-gray-900 mb-4 {{ params.legend.classes if params.legend.classes else '' }}"
+    <legend class="text-lg font-semibold text-neutral-900 mb-4 {{ params.legend.classes if params.legend.classes else '' }}"
       {{- attributes(params.legend.attributes) }}>
       {% if params.legend.html %}
         {{ params.legend.html | safe }}

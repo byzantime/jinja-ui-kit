@@ -9,7 +9,7 @@
 
     Note: This macro is styling-agnostic - you must provide styling classes via
     the 'classes' parameter. For consistent form styling, use classes like:
-    "w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+    "w-full p-3 border border-neutral-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
 
     Parameters:
     - params: Object containing all select configuration
@@ -59,7 +59,7 @@
 {% endif %}
 
 {%- if params.errorMessage %}
-  {% set classNames = classNames ~ " border-red-500 focus:ring-red-500 focus:border-red-500" %}
+  {% set classNames = classNames ~ " border-danger-500 focus:ring-danger-500 focus:border-danger-500" %}
 {% endif %}
 
 <div class="form-group {%- if params.errorMessage %} form-group--error{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"
@@ -141,7 +141,7 @@
     "id": "color_select1",
     "items": colorItems,
     "label": "Select a color:",
-    "classes": "w-full p-3 border border-gray-300 rounded-md"
+    "classes": "w-full p-3 border border-neutral-300 rounded-md"
   }) }}
 
   {# Select with object label and HTMX #}
@@ -154,7 +154,7 @@
       "text": "Color with HTMX:",
       "classes": "font-bold"
     },
-    "classes": "w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500",
+    "classes": "w-full p-3 border border-neutral-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500",
     "attributes": {
       "hx-get": "/colors",
       "hx-trigger": "change"
@@ -172,9 +172,9 @@
     ],
     "label": {
       "text": "Task Priority:",
-      "classes": "text-indigo-600"
+      "classes": "text-primary-600"
     },
-    "classes": "w-full p-3 border border-gray-300 rounded-md",
+    "classes": "w-full p-3 border border-neutral-300 rounded-md",
     "hint": {
       "text": "Choose the priority level for this task"
     },
@@ -198,11 +198,11 @@
     "hint": {
       "html": "This affects the <strong>visibility</strong> of the document"
     },
-    "classes": "w-full p-3 border-2 border-indigo-600 rounded-md",
+    "classes": "w-full p-3 border-2 border-primary-600 rounded-md",
     "formGroup": {
       "classes": "my-4",
       "beforeInput": {
-        "html": "<div class=\"text-sm text-blue-600 mb-2\">Status selection:</div>"
+        "html": "<div class=\"text-sm text-primary-600 mb-2\">Status selection:</div>"
       }
     },
     "attributes": {
@@ -219,7 +219,7 @@
     ],
     "value": "locked",
     "disabled": true,
-    "classes": "w-full p-3 border border-gray-300 rounded-md bg-gray-100",
+    "classes": "w-full p-3 border border-neutral-300 rounded-md bg-neutral-100",
     "label": {
       "text": "Read-only Status",
       "isPageHeading": true

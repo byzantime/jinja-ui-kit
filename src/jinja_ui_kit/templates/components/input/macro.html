@@ -177,7 +177,7 @@
 {%- endmacro -%}
 
 {%- macro _affixItem(affix, type) %}
-  <div class="flex items-center px-3 bg-gray-50 border border-gray-300 {% if type == 'prefix' %}rounded-l-md border-r-0{% else %}rounded-r-md border-l-0{% endif %} text-gray-500 text-sm {%- if affix.classes %} {{ affix.classes }}{% endif %}" aria-hidden="true" {{- attributes(affix.attributes) }}>
+  <div class="flex items-center px-3 bg-neutral-50 border border-neutral-300 {% if type == 'prefix' %}rounded-l-md border-r-0{% else %}rounded-r-md border-l-0{% endif %} text-neutral-500 text-sm {%- if affix.classes %} {{ affix.classes }}{% endif %}" aria-hidden="true" {{- attributes(affix.attributes) }}>
     {{- affix.html | safe | trim | indent(4) if affix.html else affix.text -}}
   </div>
 {%- endmacro -%}

@@ -42,7 +42,7 @@
 
   Modal with HTMX body:
   {% call modal({'id': 'htmx-modal', 'title': 'Details', 'bodyId': 'htmx-modal-body'}) %}
-    <div class="p-4 text-gray-400">Loading…</div>
+    <div class="p-4 text-neutral-400">Loading…</div>
   {% endcall %}
   HTMX can then swap into #htmx-modal-body
 #}
@@ -101,20 +101,20 @@
 
     {% if hasHeader %}
     <!-- Modal Header -->
-    <div class="px-6 py-4 border-b border-gray-200{{ ' ' ~ headerClasses if headerClasses }}">
+    <div class="px-6 py-4 border-b border-neutral-200{{ ' ' ~ headerClasses if headerClasses }}">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
           {% if params.icon %}
-          <div class="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full flex-shrink-0">
+          <div class="flex items-center justify-center w-10 h-10 bg-neutral-100 rounded-full flex-shrink-0">
             {{ params.icon | safe }}
           </div>
           {% endif %}
           <div>
-            <h3 class="text-lg font-semibold text-gray-900" id="{{ id }}-title">
+            <h3 class="text-lg font-semibold text-neutral-900" id="{{ id }}-title">
               {%- if params.titleHtml %}{{ params.titleHtml | safe }}{% elif params.title %}{{ params.title }}{% endif -%}
             </h3>
             {% if params.subtitleHtml or params.subtitle %}
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-neutral-600">
               {%- if params.subtitleHtml %}{{ params.subtitleHtml | safe }}{% else %}{{ params.subtitle }}{% endif -%}
             </p>
             {% endif %}
@@ -124,7 +124,7 @@
         {% if showCloseButton %}
         <button
           type="button"
-          class="text-gray-400 transition-colors hover:text-gray-600"
+          class="text-neutral-400 transition-colors hover:text-neutral-600"
           _="on click
                add .hidden to #{{ id }}
                remove .flex from #{{ id }}">
@@ -144,7 +144,7 @@
 
     {% if footerHtml %}
     <!-- Modal Footer -->
-    <div class="shrink-0 px-6 py-4 border-t border-gray-200{{ ' ' ~ footerClasses if footerClasses }}">
+    <div class="shrink-0 px-6 py-4 border-t border-neutral-200{{ ' ' ~ footerClasses if footerClasses }}">
       {{ footerHtml | safe }}
     </div>
     {% endif %}
