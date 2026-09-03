@@ -16,3 +16,6 @@ __pycache__
 
 # Ignore LLM tools
 .claude
+
+# Ignore Node modules
+node_modules/
