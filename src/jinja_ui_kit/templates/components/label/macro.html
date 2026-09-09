@@ -28,10 +28,11 @@
 #}
 {% macro label(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes -%}
+{% import "jinja_ui_kit/theme.html" as theme %}
 
 {% if params.html or params.text %}
 {% set labelHtml %}
-<label class="block text-sm font-medium text-neutral-700{% if params.classes %} {{ params.classes }}{% endif %}"
+<label class="{{ theme.label_base }}{% if params.classes %} {{ params.classes }}{% endif %}"
   {{- attributes(params.attributes) -}}
   {%- if params.for %} for="{{ params.for }}"{% endif %}>
   {{ params.html | safe | trim | indent(2) if params.html else params.text }}

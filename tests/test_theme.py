@@ -46,7 +46,18 @@ class ThemeOverrideTests(unittest.TestCase):
         override = PrefixLoader(
             {
                 "jinja_ui_kit": DictLoader(
-                    {"theme.html": '{% set textarea = "textarea-custom" %}'}
+                    {
+                        "theme.html": """
+{% set textarea = "textarea-custom" %}
+{% set input_base = "input-custom" %}
+{% set input_border_neutral = "input-border-neutral-custom" %}
+{% set input_border_error = "input-border-error-custom" %}
+{% set select_base = "select-custom" %}
+{% set select_border_neutral = "select-border-neutral-custom" %}
+{% set select_border_error = "select-border-error-custom" %}
+{% set label_base = "label-custom" %}
+"""
+                    }
                 )
             }
         )
@@ -62,6 +73,53 @@ class ThemeOverrideTests(unittest.TestCase):
         )
         self.assertIn("textarea-custom", html)
         self.assertNotIn("font-mono", html)
+
+    def test_shadowed_theme_replaces_input_defaults(self):
+        html = render(
+            self.env,
+            '{% from "jinja_ui_kit/components/input/macro.html" import input %}'
+            "{{ input({'name': 'username', 'label': {'text': 'Username'}}) }}",
+        )
+        self.assertIn("input-custom", html)
+        self.assertIn("input-border-neutral-custom", html)
+        self.assertNotIn("focus:ring-primary-500", html)
+
+    def test_shadowed_theme_replaces_input_error_variant(self):
+        html = render(
+            self.env,
+            '{% from "jinja_ui_kit/components/input/macro.html" import input %}'
+            "{{ input({'name': 'username', 'label': {'text': 'Username'}, "
+            "'errorMessage': {'text': 'Required'}}) }}",
+        )
+        self.assertIn("input-border-error-custom", html)
+
+    def test_shadowed_theme_replaces_select_defaults(self):
+        html = render(
+            self.env,
+            '{% from "jinja_ui_kit/components/select/macro.html" import select %}'
+            "{{ select({'name': 'color', 'items': []}) }}",
+        )
+        self.assertIn("select-custom", html)
+        self.assertIn("select-border-neutral-custom", html)
+        self.assertNotIn("focus:ring-primary-500", html)
+
+    def test_shadowed_theme_replaces_select_error_variant(self):
+        html = render(
+            self.env,
+            '{% from "jinja_ui_kit/components/select/macro.html" import select %}'
+            "{{ select({'name': 'color', 'items': [], "
+            "'errorMessage': {'text': 'Required'}}) }}",
+        )
+        self.assertIn("select-border-error-custom", html)
+
+    def test_shadowed_theme_replaces_label_defaults(self):
+        html = render(
+            self.env,
+            '{% from "jinja_ui_kit/components/label/macro.html" import label %}'
+            "{{ label({'text': 'Username', 'for': 'username'}) }}",
+        )
+        self.assertIn("label-custom", html)
+        self.assertNotIn("text-neutral-700", html)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 {% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
 {% from "jinja_ui_kit/components/hint/macro.html" import hint %}
 {% from "jinja_ui_kit/components/label/macro.html" import label %}
+{% import "jinja_ui_kit/theme.html" as theme %}
   {#
     Macro for creating a select input following govuk-frontend-jinja patterns
     with support for labels, hints, errors, and custom attributes
@@ -57,16 +58,16 @@
     by generated-stylesheet order, not class-attribute order, so having both
     the neutral and danger variants present at the same time would silently
     pick whichever one Tailwind happened to emit last. #}
-{%- set classNames = "w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500" -%}
+{%- set classNames = theme.select_base -%}
 
 {%- if params.classes %}
   {% set classNames = classNames ~ " " ~ params.classes %}
 {% endif %}
 
 {%- if params.errorMessage %}
-  {% set classNames = classNames ~ " border-danger-500 focus:ring-danger-500 focus:border-danger-500" %}
+  {% set classNames = classNames ~ " " ~ theme.select_border_error %}
 {%- else %}
-  {% set classNames = classNames ~ " border-neutral-300 focus:border-transparent" %}
+  {% set classNames = classNames ~ " " ~ theme.select_border_neutral %}
 {% endif %}
 
 <div class="form-group {%- if params.errorMessage %} form-group--error{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"

@@ -50,6 +50,7 @@
 {% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
 {% from "jinja_ui_kit/components/hint/macro.html" import hint %}
 {% from "jinja_ui_kit/components/label/macro.html" import label %}
+{% import "jinja_ui_kit/theme.html" as theme %}
 
 {#- a record of other elements that we need to associate with the input using
   aria-describedby – for example hints or error messages -#}
@@ -60,7 +61,7 @@
 {%- set hasSuffix = true if params.suffix and (params.suffix.text or params.suffix.html) else false %}
 
 {#- Set classes for this component #}
-{%- set classNames = "w-full px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" -%}
+{%- set classNames = theme.input_base -%}
 
 {%- if params.classes %}
   {#- Remove border radius classes if we have prefix/suffix since we'll add specific ones #}
@@ -73,9 +74,9 @@
 {% endif %}
 
 {%- if params.errorMessage %}
-  {% set classNames = classNames ~ " border-danger-500 focus:ring-danger-500" %}
+  {% set classNames = classNames ~ " " ~ theme.input_border_error %}
 {%- else %}
-  {% set classNames = classNames ~ " border-neutral-300" %}
+  {% set classNames = classNames ~ " " ~ theme.input_border_neutral %}
 {% endif %}
 
 {#- Add border radius classes based on prefix/suffix presence #}
