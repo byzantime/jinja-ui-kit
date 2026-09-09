@@ -24,8 +24,9 @@
 #}
 {% macro fieldset(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/templates/theme.html" import theme %}
 
-<fieldset class="border-0 p-0 m-0 {{ params.classes if params.classes else '' }}"
+<fieldset class="{{ theme.fieldset_base }} {{ params.classes if params.classes else '' }}"
   {{- attributes(params.attributes) }}>
 
   {% if params.legend %}

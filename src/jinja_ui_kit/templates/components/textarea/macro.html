@@ -28,12 +28,13 @@
 #}
 {% macro textarea(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/templates/theme.html" import theme %}
 {% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
 {% from "jinja_ui_kit/components/hint/macro.html" import hint %}
 {% from "jinja_ui_kit/components/label/macro.html" import label %}
 
-{#- Set classes for this component #}
-{%- set classNames = "w-full px-3 py-2 text-sm border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y font-mono" -%}
+{#- Set classes for this component -#}
+{%- set classNames = theme.textarea -%}
 
 {%- if params.classes %}
   {% set classNames = classNames ~ " " ~ params.classes %}

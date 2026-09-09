@@ -46,6 +46,7 @@
 {% from "jinja_ui_kit/components/hint/macro.html" import hint %}
 {% from "jinja_ui_kit/components/label/macro.html" import label %}
 {% from "jinja_ui_kit/components/fieldset/macro.html" import fieldset %}
+{% from "jinja_ui_kit/templates/theme.html" import theme %}
 
 {%- set id = params.id if params.id else params.namePrefix -%}
 {%- set items = params.get('items') or [
@@ -98,18 +99,18 @@
     {% for item in items %}
       {%- set itemId = item.id if item.id else id ~ '-' ~ item.name -%}
       {%- set itemName = params.namePrefix ~ '-' ~ item.name if params.namePrefix else item.name -%}
-      {%- set widthClass = "w-24" if item.name == 'year' else "w-16" -%}
+      {%- set widthClass = theme.date_input_width_year if item.name == 'year' else theme.date_input_width_default -%}
       <div>
         {{ label({
           'text': item.label.text if item.label,
           'html': item.label.html if item.label,
-          'classes': "block font-medium text-neutral-900 mb-1" ~ (' ' ~ item.label.classes if item.label and item.label.classes else ""),
+          'classes': theme.date_input_label ~ (' ' ~ item.label.classes if item.label and item.label.classes else ""),
           'attributes': item.label.attributes if item.label,
           'for': itemId
         }) | trim }}
         <input
           {{- attributes({
-            'class': widthClass ~ " border-2 border-neutral-900 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none" ~ (' ' ~ item.classes if item.classes else ""),
+            'class': widthClass ~ " " ~ theme.date_input_field ~ (' ' ~ item.classes if item.classes else ""),
             'id': itemId,
             'name': itemName,
             'type': 'text',

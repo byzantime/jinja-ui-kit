@@ -70,6 +70,7 @@
 #}
 {% macro checkboxes(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% from "jinja_ui_kit/templates/theme.html" import theme %}
 {% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
 {% from "jinja_ui_kit/components/hint/macro.html" import hint %}
 {% from "jinja_ui_kit/components/label/macro.html" import label %}
@@ -79,8 +80,8 @@
 {% set describedBy = params.describedBy if params.describedBy else undefined -%}
 {%- set hasFieldset = true if params.fieldset else false %}
 {%- set hasHint = true if params.hint and (params.hint.text or params.hint.html) else false %}
-{%- set checkboxClasses = "h-6 w-6" if params.size == "small" else "h-8 w-8" %}
-{%- set checkboxClasses = checkboxClasses ~ " rounded border-2 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" %}
+{%- set checkboxClasses = theme.checkbox_size_small if params.size == "small" else theme.checkbox_size_default %}
+{%- set checkboxClasses = checkboxClasses ~ " " ~ theme.checkbox_base %}
 
 {%- set outerHtml %}
 <div class="space-y-4 {%- if params.errorMessage %} mb-6{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"
@@ -124,7 +125,7 @@
           <div class="flex items-center">
             <input
               {{- attributes({
-                'class': checkboxClasses,
+                'class': checkboxClasses ~ " " ~ params.classes if params.classes else "",
                 'id': itemId,
                 'name': itemName,
                 'type': 'checkbox',

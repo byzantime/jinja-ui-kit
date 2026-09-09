@@ -1,0 +1,26 @@
+{%- set button_base = "inline-flex items-center justify-center whitespace-nowrap px-4 py-2 border text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200" -%}
+{%- set button_variants = {
+    'primary': "border-transparent text-white bg-primary-600 hover:bg-primary-700 focus:ring-primary-500",
+    'secondary': "border-neutral-300 text-neutral-700 bg-white hover:bg-neutral-50 focus:ring-primary-500",
+    'warning': "border-transparent text-white bg-danger-600 hover:bg-danger-700 focus:ring-danger-500",
+    'inverse': "border-neutral-300 text-neutral-900 bg-white hover:bg-neutral-50 focus:ring-primary-500",
+    'start': "border-transparent text-white bg-success-600 hover:bg-success-700 focus:ring-success-500",
+} -%}
+{%- set button_start_variant = "pr-6" -%}
+{%- set button_disabled = "opacity-50 cursor-not-allowed pointer-events-none" -%}
+{%- set textarea = "w-full px-3 py-2 text-sm border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y font-mono" -%}
+{%- set file_upload = "w-full px-3 py-2 text-sm border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 file:cursor-pointer" -%}
+{%- set checkbox_base = "rounded border-2 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" -%}
+{%- set checkbox_size_small = "h-6 w-6" -%}
+{%- set checkbox_size_default = "h-8 w-8" -%}
+{%- set radio_base = "border-2 border-neutral-900 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" -%}
+{%- set radio_size_small = "h-5 w-5" -%}
+{%- set radio_size_default = "h-6 w-6" -%}
+{%- set date_input_field = "border-2 border-neutral-900 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none" -%}
+{%- set date_input_width_year = "w-24" -%}
+{%- set date_input_width_default = "w-16" -%}
+{%- set date_input_label = "block font-medium text-neutral-900 mb-1" -%}
+{%- set fieldset_base = "border-0 p-0 m-0" -%}
+{%- set legend_base = "text-lg font-semibold text-neutral-900 mb-4" -%}
+{%- set hint_base = "block text-sm text-neutral-600 mb-2" -%}
+{%- set error_message_base = "text-danger-700" -%}
