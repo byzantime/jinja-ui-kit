@@ -1,7 +1,8 @@
 {% macro hint(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes -%}
+{% import "jinja_ui_kit/theme.html" as theme -%}
 
-<div {%- if params.id %} id="{{ params.id }}"{% endif %} class="block text-sm text-neutral-600 mb-2{%- if params.classes %} {{ params.classes }}{% endif %}"
+<div {%- if params.id %} id="{{ params.id }}"{% endif %} class="{{ theme.hint_base }}{%- if params.classes %} {{ params.classes }}{% endif %}"
   {{- attributes(params.attributes) }}>
   {{ params.html | safe | trim | indent(2) if params.html else params.text }}
 </div>

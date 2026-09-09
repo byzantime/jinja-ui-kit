@@ -44,6 +44,7 @@
 #}
 {% macro fileUpload(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% import "jinja_ui_kit/theme.html" as theme %}
 {% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
 {% from "jinja_ui_kit/components/hint/macro.html" import hint %}
 {% from "jinja_ui_kit/components/label/macro.html" import label %}
@@ -53,8 +54,8 @@
 {% set describedBy = params.describedBy if params.describedBy else undefined -%}
 {%- set id = params.id if params.id else params.name -%}
 
-{#- Set classes for this component #}
-{%- set classNames = "w-full px-3 py-2 text-sm border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 file:cursor-pointer" -%}
+{#- Set classes for this component -#}
+{%- set classNames = theme.file_upload -%}
 
 {%- if params.classes %}
   {% set classNames = classNames ~ " " ~ params.classes %}

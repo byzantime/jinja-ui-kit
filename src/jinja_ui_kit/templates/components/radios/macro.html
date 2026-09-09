@@ -10,6 +10,7 @@
   @param {object} [params.formGroup] - Form group wrapper
   @param {string} [params.size] - Size variant ('small' for smaller radios)
   @param {boolean} [params.inline] - Render radio items side-by-side (equivalent to govuk-radios--inline)
+  @param {string} [params.classes] - Additional CSS classes for each radio input
   @param {object} [params.attributes] - Additional HTML attributes
 
   Item structure:
@@ -78,6 +79,7 @@
 #}
 {% macro radios(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% import "jinja_ui_kit/theme.html" as theme %}
 {% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
 {% from "jinja_ui_kit/components/hint/macro.html" import hint %}
 {% from "jinja_ui_kit/components/label/macro.html" import label %}
@@ -87,8 +89,7 @@
 {% set describedBy = params.describedBy if params.describedBy else undefined -%}
 {%- set hasFieldset = true if params.fieldset else false %}
 {%- set hasHint = true if params.hint and (params.hint.text or params.hint.html) else false %}
-{%- set radioClasses = "h-5 w-5" if params.size == "small" else "h-6 w-6" %}
-{%- set radioClasses = radioClasses ~ " border-2 border-neutral-900 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" %}
+{%- set radioClasses = (theme.radio_size_small if params.size == "small" else theme.radio_size_default) ~ " " ~ theme.radio_base %}
 
 {%- set outerHtml %}
 <div class="space-y-4 {%- if params.errorMessage %} mb-6{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"
@@ -131,7 +132,7 @@
           <div class="flex items-center">
             <input
               {{- attributes({
-                'class': radioClasses,
+                'class': radioClasses ~ (" " ~ params.classes if params.classes else ""),
                 'id': itemId,
                 'name': params.name,
                 'type': 'radio',
