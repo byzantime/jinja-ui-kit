@@ -80,6 +80,13 @@ class FormFieldDefaultClassesTests(unittest.TestCase):
         self.assertIn("border-neutral-300", classes)
         self.assertIn("rounded-md", classes)
 
+    def test_select_ships_bg_white_background(self):
+        html = self._render("select", {"name": "color", "items": []})
+        classes = self._classes(html, "select")
+
+        self.assertIn("bg-white", classes)
+        self.assertNotIn("bg-neutral-100", classes)
+
     def test_select_appends_custom_classes(self):
         html = self._render(
             "select", {"name": "color", "items": [], "classes": "custom-class"}
