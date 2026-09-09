@@ -20,6 +20,7 @@ name = "jinja_ui_kit"
 [tool.flit.sdist]
 include = [
     "src/jinja_ui_kit/dist/jinja-ui-kit.min.css",
+    "src/jinja_ui_kit/styles/semantic.css",
     "src/jinja_ui_kit/templates/**/*.html",
     "README.md",
     "LICENSE.txt",

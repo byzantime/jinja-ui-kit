@@ -28,7 +28,7 @@
 #}
 {% macro textarea(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
-{% from "jinja_ui_kit/templates/theme.html" import theme %}
+{% import "jinja_ui_kit/theme.html" as theme %}
 {% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
 {% from "jinja_ui_kit/components/hint/macro.html" import hint %}
 {% from "jinja_ui_kit/components/label/macro.html" import label %}

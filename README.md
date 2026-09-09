@@ -320,7 +320,44 @@ module.exports = {
 
 Because Tailwind compiles utility classes on demand from your build's content scan, overriding `primary` here changes the color of every `bg-primary-*`/`text-primary-*`/`border-primary-*`/`ring-primary-*` class jinja-ui-kit's templates use — including buttons, focus rings, and links — without touching Tailwind's own `blue` palette or repainting unrelated uses of blue elsewhere in your app.
 
-**If your project does not use Tailwind CSS**, you're using jinja-ui-kit's pre-compiled `jinja-ui-kit.min.css`, which ships with the default palette baked in. Overriding the token colors requires forking or patching that build (see [Development](#development) above) rather than a config change.
+### Non-colour defaults: `theme.html`
+
+Every non-colour default — spacing, control sizes, border radius, fonts, button variants — lives as a named value in a single template, [`jinja_ui_kit/theme.html`](src/jinja_ui_kit/templates/theme.html), which the component macros import. To change any of them, shadow that file: copy the shipped one into your own templates, edit it, and map it in a loader placed *before* jinja-ui-kit's:
+
+```python
+app.jinja_loader = ChoiceLoader([
+    PrefixLoader({
+        # Contains your edited copy as theme.html
+        "jinja_ui_kit": FileSystemLoader("src/templates/jinja_ui_kit_overrides"),
+    }),
+    PrefixLoader({
+        "jinja_ui_kit": PackageLoader("jinja_ui_kit"),
+    }),
+    app.jinja_loader,
+])
+```
+
+Always start from a full copy of the shipped file: a key missing from your override renders as an empty string, not as the kit default. Per-call-site `params.classes` still *appends* to these defaults — wholesale replacement happens in `theme.html`, not per call.
+
+### Semantic hooks and the optional semantic layer
+
+Form components emit stable semantic classes: `.form-group`, `.form-group--error`, `.textarea__wrapper`, `.file-upload__wrapper`. The kit ships modest default styles for them in `styles/semantic.css` (field spacing, error accent). Tailwind consumers opt in with a generated shim (same pattern as the content glob):
+
+```bash
+python -c "from jinja_ui_kit.assets import write_semantic_css_import; write_semantic_css_import()"
+```
+
+then at the top of your Tailwind input CSS, before the `@tailwind` directives:
+
+```css
+@import "./jinja_ui_kit_semantic.css";
+```
+
+Add `jinja_ui_kit_semantic.css` to `.gitignore`. The rules compile against *your* theme tokens and are plain `@layer components` styles, so you can override them by normal cascade — or skip the import and define the hooks yourself.
+
+### If your project does not use Tailwind CSS
+
+The pre-compiled `jinja-ui-kit.min.css` is a frozen snapshot of the defaults: the default palette *and* the default `theme.html` classes, semantic layer included. Remapping colour tokens or shadowing `theme.html` with classes outside that snapshot requires the Tailwind route above (or forking the build — see [Development](#development)); the dist file suits projects happy with the kit's look as-is.
 
 ## Design Philosophy
 

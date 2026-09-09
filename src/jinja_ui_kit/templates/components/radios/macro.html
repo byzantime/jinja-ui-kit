@@ -10,6 +10,7 @@
   @param {object} [params.formGroup] - Form group wrapper
   @param {string} [params.size] - Size variant ('small' for smaller radios)
   @param {boolean} [params.inline] - Render radio items side-by-side (equivalent to govuk-radios--inline)
+  @param {string} [params.classes] - Additional CSS classes for each radio input
   @param {object} [params.attributes] - Additional HTML attributes
 
   Item structure:
@@ -78,7 +79,7 @@
 #}
 {% macro radios(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
-{% from "jinja_ui_kit/templates/theme.html" import theme %}
+{% import "jinja_ui_kit/theme.html" as theme %}
 {% from "jinja_ui_kit/components/error-message/macro.html" import errorMessage %}
 {% from "jinja_ui_kit/components/hint/macro.html" import hint %}
 {% from "jinja_ui_kit/components/label/macro.html" import label %}
@@ -131,7 +132,7 @@
           <div class="flex items-center">
             <input
               {{- attributes({
-                'class': radioClasses ~ " " ~ params.classes if params.classes else "",
+                'class': radioClasses ~ (" " ~ params.classes if params.classes else ""),
                 'id': itemId,
                 'name': params.name,
                 'type': 'radio',

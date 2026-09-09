@@ -29,11 +29,12 @@
 #}
 {% macro errorMessage(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes -%}
+{% import "jinja_ui_kit/theme.html" as theme -%}
 
 {% set visuallyHiddenText = params.visuallyHiddenText | default("Error") -%}
 {% set errorMessageText = params.html | safe | trim | indent(2) if params.html else params.text -%}
 
-<p {%- if params.id %} id="{{ params.id }}"{% endif %} class="text-danger-700 {%- if params.classes %} {{ params.classes }}{% endif %}"
+<p {%- if params.id %} id="{{ params.id }}"{% endif %} class="{{ theme.error_message_base }} {%- if params.classes %} {{ params.classes }}{% endif %}"
   {{- attributes(params.attributes) }}>
   {% if visuallyHiddenText %}
   <span class="sr-only">{{ visuallyHiddenText }}:</span> {{ errorMessageText }}

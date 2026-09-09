@@ -46,7 +46,7 @@
 #}
 {% macro button(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
-{% from "jinja_ui_kit/templates/theme.html" import theme %}
+{% import "jinja_ui_kit/theme.html" as theme %}
 
 {#- Determine element type -#}
 {% set element = params.element if params.element else (
@@ -60,18 +60,16 @@
 
 {#- Set variant-specific classes -#}
 {% set variant = params.variant | default('primary') %}
-{% set variantClasses = theme.button_variants[variant] %}
+{% set variantClasses = theme.button_variants[variant] if variant in theme.button_variants else theme.button_variants['primary'] %}
 
 {#- Add start button specific classes -#}
 {% if params.isStart %}
-  {% set baseClasses = baseClasses ~ " " ~ theme.button_start_variant %}
+  {% set variantClasses = theme.button_variants['start'] %}
+  {% set baseClasses = baseClasses ~ " " ~ theme.button_start_extra %}
 {% endif %}
 
 {#- Add disabled classes -#}
-{% set disabledClasses = theme.button_disabled %}
-{% if not params.disabled %}
-  {% set disabledClasses = "" %}
-{% endif %}
+{% set disabledClasses = theme.button_disabled if params.disabled else "" %}
 
 {#- Combine all classes -#}
 {% set classNames = baseClasses ~ " " ~ variantClasses %}

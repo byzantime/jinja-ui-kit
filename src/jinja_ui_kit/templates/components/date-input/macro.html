@@ -46,7 +46,7 @@
 {% from "jinja_ui_kit/components/hint/macro.html" import hint %}
 {% from "jinja_ui_kit/components/label/macro.html" import label %}
 {% from "jinja_ui_kit/components/fieldset/macro.html" import fieldset %}
-{% from "jinja_ui_kit/templates/theme.html" import theme %}
+{% import "jinja_ui_kit/theme.html" as theme %}
 
 {%- set id = params.id if params.id else params.namePrefix -%}
 {%- set items = params.get('items') or [

@@ -24,13 +24,13 @@
 #}
 {% macro fieldset(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
-{% from "jinja_ui_kit/templates/theme.html" import theme %}
+{% import "jinja_ui_kit/theme.html" as theme %}
 
 <fieldset class="{{ theme.fieldset_base }} {{ params.classes if params.classes else '' }}"
   {{- attributes(params.attributes) }}>
 
   {% if params.legend %}
-    <legend class="text-lg font-semibold text-neutral-900 mb-4 {{ params.legend.classes if params.legend.classes else '' }}"
+    <legend class="{{ theme.legend_base }} {{ params.legend.classes if params.legend.classes else '' }}"
       {{- attributes(params.legend.attributes) }}>
       {% if params.legend.html %}
         {{ params.legend.html | safe }}

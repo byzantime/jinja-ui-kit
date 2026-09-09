@@ -1,0 +1,26 @@
+/* jinja-ui-kit semantic layer (optional).
+ *
+ * Structural defaults for the semantic hooks the macros emit:
+ *   .form-group / .form-group--error   — field spacing and error-state accent
+ *   .textarea__wrapper                 — before/after-textarea layout
+ *   .file-upload__wrapper              — before/after-file-input layout
+ *
+ * Tailwind consumers: @import this file into your own input.css (see
+ * write_semantic_css_import() in jinja_ui_kit.assets) so these rules compile
+ * against your theme's tokens. Override via normal cascade, or skip the
+ * import entirely and define the hooks yourself.
+ */
+@layer components {
+  .form-group {
+    @apply mb-4;
+  }
+
+  .form-group--error {
+    @apply border-l-4 border-danger-500 pl-3;
+  }
+
+  .textarea__wrapper,
+  .file-upload__wrapper {
+    @apply mt-1;
+  }
+}
