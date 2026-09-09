@@ -60,7 +60,7 @@
 {%- set hasSuffix = true if params.suffix and (params.suffix.text or params.suffix.html) else false %}
 
 {#- Set classes for this component #}
-{%- set classNames = "" -%}
+{%- set classNames = "w-full px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" -%}
 
 {%- if params.classes %}
   {#- Remove border radius classes if we have prefix/suffix since we'll add specific ones #}
@@ -73,7 +73,9 @@
 {% endif %}
 
 {%- if params.errorMessage %}
-  {% set classNames = classNames ~ " input--error" %}
+  {% set classNames = classNames ~ " border-danger-500 focus:ring-danger-500" %}
+{%- else %}
+  {% set classNames = classNames ~ " border-neutral-300" %}
 {% endif %}
 
 {#- Add border radius classes based on prefix/suffix presence #}

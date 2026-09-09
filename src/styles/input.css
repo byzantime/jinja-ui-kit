@@ -11,3 +11,9 @@
 }
 
 /* Additional component-specific styles can be added here */
+
+@layer components {
+  .form-group {
+    @apply mb-4;
+  }
+}

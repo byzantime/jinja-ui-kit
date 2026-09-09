@@ -31,7 +31,7 @@
 
 {% if params.html or params.text %}
 {% set labelHtml %}
-<label class="{%- if params.classes %}{{ params.classes }}{% endif %}"
+<label class="block text-sm font-medium text-neutral-700{% if params.classes %} {{ params.classes }}{% endif %}"
   {{- attributes(params.attributes) -}}
   {%- if params.for %} for="{{ params.for }}"{% endif %}>
   {{ params.html | safe | trim | indent(2) if params.html else params.text }}

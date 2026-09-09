@@ -7,9 +7,9 @@
     Macro for creating a select input following govuk-frontend-jinja patterns
     with support for labels, hints, errors, and custom attributes
 
-    Note: This macro is styling-agnostic - you must provide styling classes via
-    the 'classes' parameter. For consistent form styling, use classes like:
-    "w-full p-3 border border-neutral-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+    Note: This macro ships default field styling. The 'classes' parameter is
+    optional and, if provided, is appended to the default classes rather than
+    replacing them.
 
     Parameters:
     - params: Object containing all select configuration
@@ -39,7 +39,7 @@
         - attributes: additional attributes for form group wrapper
         - beforeInput: content to render before select element
         - afterInput: content to render after select element
-      - classes: CSS classes for the select element (REQUIRED for styling)
+      - classes: additional CSS classes for the select element (optional, appended to the default styling)
       - disabled: disable the select element
       - describedBy: additional aria-describedby values
       - attributes: additional attributes for the select element
@@ -52,7 +52,12 @@
 {%- set id = params.id if params.id else params.name -%}
 
 {#- Set classes for this component #}
-{%- set classNames = "" -%}
+{#- Border color is added below (not here) so only one border-color utility is
+    ever present at once - Tailwind resolves same-specificity utility clashes
+    by generated-stylesheet order, not class-attribute order, so having both
+    the neutral and danger variants present at the same time would silently
+    pick whichever one Tailwind happened to emit last. #}
+{%- set classNames = "w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500" -%}
 
 {%- if params.classes %}
   {% set classNames = classNames ~ " " ~ params.classes %}
@@ -60,6 +65,8 @@
 
 {%- if params.errorMessage %}
   {% set classNames = classNames ~ " border-danger-500 focus:ring-danger-500 focus:border-danger-500" %}
+{%- else %}
+  {% set classNames = classNames ~ " border-neutral-300 focus:border-transparent" %}
 {% endif %}
 
 <div class="form-group {%- if params.errorMessage %} form-group--error{% endif %} {%- if params.formGroup and params.formGroup.classes %} {{ params.formGroup.classes }}{% endif %}"
