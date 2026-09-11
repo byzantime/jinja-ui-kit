@@ -19,11 +19,13 @@
   @param {string} [params.rows[].cells[].classes] - Extra CSS classes on the <td> element
   @param {object} [params.rows[].cells[].attributes] - Extra HTML attributes on the <td> element
   @param {string} [params.rows[].classes] - Extra CSS classes on the <tr> element
-  @param {string} [params.rows[].id] - Row identifier for clickable-row events; falls back to loop index
+  @param {string} [params.rows[].id] - Row identifier; rendered (autoescaped) in a data-row-id attribute on
+      clickable rows, which the click handler reads; falls back to loop index
   @param {string} [params.maxHeight] - CSS max-height for the scrollable body; omit for no height limit
   @param {Array}  [params.rowActions] - Action links appended as a final column; each has 'label' and 'url'
   @param {boolean}[params.clickableRows=false] - Whether rows emit a Hyperscript event on click
-  @param {string} [params.rowClickEvent='rowClicked'] - Event name triggered on row click
+  @param {string} [params.rowClickEvent='rowClicked'] - Event name triggered on row click; must match
+      ^[A-Za-z_][A-Za-z0-9_:-]*$ since it is spliced as bare Hyperscript source
   @param {string} [params.emptyText='No data available'] - Text shown when rows is empty or absent
 
   Usage:
@@ -68,6 +70,26 @@
 {%- set rowClickEvent = params.rowClickEvent if params.rowClickEvent is defined else 'rowClicked' -%}
 {%- set emptyText     = params.emptyText     if params.emptyText     is defined else 'No data available' -%}
 
+{#- rowClickEvent is spliced as bare Hyperscript source, so it must be a plain
+    identifier. Jinja 3.1 has no regex filter and no raise(), so validate by hand:
+    first char in [A-Za-z_], the rest in [A-Za-z0-9_:], then trip a deliberately
+    undefined dict subscript (whose key is the error message) to raise a named
+    UndefinedError at render time rather than emitting broken Hyperscript. Only
+    checked when clickableRows, the only path that splices it. -#}
+{%- if clickableRows -%}
+{%- set ident_start = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_' -%}
+{%- set ident_rest  = ident_start ~ '0123456789:' -%}
+{%- set rowClickEvent_valid = (
+    rowClickEvent is string
+    and rowClickEvent
+    and rowClickEvent[0] in ident_start
+    and (rowClickEvent[1:] | reject('in', ident_rest) | list | length) == 0
+) -%}
+{%- if not rowClickEvent_valid -%}
+  {{ params['rowClickEvent must match ^[A-Za-z_][A-Za-z0-9_:-]*$, got: ' ~ rowClickEvent]() }}
+{%- endif -%}
+{%- endif -%}
+
 <div class="overflow-x-auto border border-neutral-200">
   <div{% if maxHeight %} class="overflow-y-auto" style="max-height: {{ maxHeight }}"{% endif %}>
       <table class="min-w-full divide-y divide-neutral-200">
@@ -106,7 +128,7 @@
             <tr
               id="row-{{ row_id }}"
               class="{% if clickableRows %}cursor-pointer hover:bg-neutral-50{% endif %}{% if row.classes %} {{ row.classes }}{% endif %}"
-              {% if clickableRows %}_="on click trigger {{ rowClickEvent }}(rowId:'{{ row_id }}')"{% endif %}
+              {% if clickableRows %}data-row-id="{{ row_id }}" _="on click trigger {{ rowClickEvent }}(rowId: @data-row-id)"{% endif %}
             >
               {% for cell in row.cells %}
                 <td class="px-6 py-4 text-sm text-neutral-500 whitespace-nowrap{% if cell.classes %} {{ cell.classes }}{% endif %}"
