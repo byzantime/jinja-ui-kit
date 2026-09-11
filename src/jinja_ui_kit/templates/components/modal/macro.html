@@ -15,10 +15,9 @@
   @param {boolean} [params.showCloseButton=true] - Render a close (✕) button in the header
   @param {boolean} [params.enableKeyboardClose=true] - Close on Escape key
   @param {string} [params.dirtyMessage='Discard unsaved changes?'] - Confirmation prompt shown when closing a
-      modal that has unsaved input/change activity in it. Interpolated raw into a hyperscript single-quoted
-      string literal (the same, currently-undocumented, splicing pattern row_id/rowClickEvent already use in
-      the table macro), so a literal `'` in the message will break the whole overlay `_` attribute's parsing,
-      not just the confirm prompt.
+      modal that has unsaved input/change activity in it. Rendered as the overlay's `data-dirty-message`
+      attribute and read by hyperscript at confirm time, so the message never enters hyperscript source and
+      any text is safe, including user-derived values.
   @param {string} [params.customClasses] - Extra CSS classes on the content panel
   @param {string} [params.headerClasses] - Extra CSS classes on the header div
   @param {string} [params.bodyClasses] - Extra CSS classes on the scrollable body div
@@ -26,7 +25,8 @@
   @param {string} [params.footerHtml] - HTML rendered in a non-scrolling footer below the body. For complex
       Jinja content (forms, macros), capture with {% set footer %}...{% endset %} and pass the variable.
   @param {string} [params.footerClasses] - Extra CSS classes on the footer div
-  @param {object} [params.attributes] - Additional HTML attributes on the overlay element
+  @param {object} [params.attributes] - Additional HTML attributes on the overlay element. `data-dirty-message`
+      is reserved for the dirty prompt and is set from `dirtyMessage`.
 
   Usage:
   {% from "jinja_ui_kit/components/modal/macro.html" import modal %}
@@ -45,11 +45,18 @@
   Modal opened via hyperscript:
   <button _="on click remove .hidden from #confirm-modal add .flex to #confirm-modal">Open</button>
 
-  Closing a modal: all built-in close paths (backdrop click, ✕ button, Escape) send a `closeModal` custom
-  event to the overlay, which guards the close with a confirm() prompt if the modal has been marked dirty
-  (any input/change inside it since it was last shown). Consumer Cancel buttons should do the same to get
-  the same guard:
-  <button _="on click send closeModal to #my-modal">Cancel</button>
+  Events: the overlay listens for two custom events.
+  - `closeModal` (inbound): runs the built-in close path, guarded by a confirm() prompt if the modal has
+    been marked dirty (any input/change inside it since it was last shown). It is a no-op when the overlay
+    is already `.hidden`. All built-in close paths (backdrop click, ✕ button, Escape) send it, and consumer
+    Cancel buttons should send it to get the same guard:
+    <button _="on click send closeModal to #my-modal">Cancel</button>
+  - `markModalClean` (inbound): clears the dirty flag. Send it after a save that keeps the modal open, so the
+    next close does not falsely offer to discard. `:dirty` lives on the overlay, so swapping the body does
+    not reset it.
+    hyperscript: send markModalClean to #my-modal
+    JS:          document.querySelector('#my-modal').dispatchEvent(new CustomEvent('markModalClean'))
+    htmx:        hx-on::after-request="if(event.detail.successful) htmx.trigger('#my-modal','markModalClean')"
   Closing by toggling `.hidden`/`.flex` directly (as the "Modal opened via hyperscript" example above does
   for opening) bypasses the dirty-check guard — fine for post-submit closes, not for a Cancel button on a
   dirty form.
@@ -96,15 +103,18 @@
   _="on mousedown set :pressedBackdrop to (event.target is me)
      on click if :pressedBackdrop send closeModal to me end
      on input or change if I do not match .hidden set :dirty to true end
-     on mutation of @class if I do not match .hidden set :dirty to false end
+     on mutation of @class set :dirty to false end
+     on markModalClean set :dirty to false end
      {% if enableKeyboardClose %}on keydown[key=='Escape'] from document send closeModal to me{% endif %}
      on closeModal
+       if I match .hidden exit end
        if :dirty
-         if not confirm('{{ dirtyMessage }}') halt end
+         if not confirm(@data-dirty-message) halt end
        end
        add .hidden to me
        remove .flex from me
        set :dirty to false"
+  data-dirty-message="{{ dirtyMessage }}"
   {{- attributes(params.attributes) -}}>
 
   <!-- Modal Content -->

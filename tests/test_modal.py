@@ -30,6 +30,11 @@ class ModalMacroTests(unittest.TestCase):
         self.assertIsNotNone(match)
         return match.group(1)
 
+    def _overlay_tag(self, html):
+        match = re.search(r'<div\b[^>]*\bid="modal"[^>]*>', html)
+        self.assertIsNotNone(match)
+        return match.group(0)
+
     def test_fullscreen_sets_fixed_height_and_max_height(self):
         html = self._render({"size": "fullscreen"})
         style = self._style(html)
@@ -65,7 +70,13 @@ class ModalMacroTests(unittest.TestCase):
 
         self.assertIn("on closeModal", overlay_hs)
         self.assertIn("if :dirty", overlay_hs)
-        self.assertIn("confirm('Discard unsaved changes?')", overlay_hs)
+        self.assertIn("confirm(@data-dirty-message)", overlay_hs)
+
+        close_index = overlay_hs.index("on closeModal")
+        guard_index = overlay_hs.index("if I match .hidden exit end")
+        dirty_index = overlay_hs.index("if :dirty")
+        self.assertLess(close_index, guard_index)
+        self.assertLess(guard_index, dirty_index)
 
     def test_header_close_button_sends_closeModal(self):
         html = self._render({"id": "modal"})
@@ -86,10 +97,42 @@ class ModalMacroTests(unittest.TestCase):
 
     def test_custom_dirty_message_is_rendered(self):
         html = self._render({"dirtyMessage": "Lose your edits?"})
+        overlay_tag = self._overlay_tag(html)
+
+        self.assertIn('data-dirty-message="Lose your edits?"', overlay_tag)
+        self.assertNotIn("Discard unsaved changes?", overlay_tag)
+
+    def test_default_dirty_message_is_rendered(self):
+        html = self._render({})
+        overlay_tag = self._overlay_tag(html)
+
+        self.assertIn('data-dirty-message="Discard unsaved changes?"', overlay_tag)
+
+    def test_dirty_message_cannot_inject_hyperscript(self):
+        html = self._render({"dirtyMessage": "ok') then fetch('/evil') then confirm('"})
+        overlay_hs = self._overlay_hyperscript(html)
+        overlay_tag = self._overlay_tag(html)
+
+        self.assertNotIn("fetch(", overlay_hs)
+
+        match = re.search(r'data-dirty-message="([^"]*)"', overlay_tag)
+        self.assertIsNotNone(match)
+        value = match.group(1)
+        self.assertIn("&#39;", value)
+        self.assertNotIn("'", value)
+
+    def test_overlay_clears_dirty_on_markModalClean(self):
+        html = self._render({})
         overlay_hs = self._overlay_hyperscript(html)
 
-        self.assertIn("confirm('Lose your edits?')", overlay_hs)
-        self.assertNotIn("Discard unsaved changes?", overlay_hs)
+        self.assertIn("on markModalClean set :dirty to false", overlay_hs)
+
+    def test_class_mutation_always_clears_dirty(self):
+        html = self._render({})
+        overlay_hs = self._overlay_hyperscript(html)
+
+        self.assertIn("on mutation of @class set :dirty to false", overlay_hs)
+        self.assertNotIn("on mutation of @class if", overlay_hs)
 
 
 if __name__ == "__main__":
