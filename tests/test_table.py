@@ -34,12 +34,15 @@ class StickyHeaderTableMacroTests(unittest.TestCase):
         return params
 
     def test_hostile_row_id_stays_in_autoescaped_data_attribute(self):
-        hostile = "x') then fetch('/evil') then trigger openModal('"
+        hostile = "x\") then fetch('/evil') then trigger openModal('"
         html = self._render(
             self._clickable_params(hostile, rowClickEvent="openModal")
         )
 
-        self.assertIn('data-row-id="x&#39;) then fetch(&#39;/evil&#39;) then trigger openModal(&#39;"', html)
+        self.assertIn(
+            'data-row-id="x&#34;) then fetch(&#39;/evil&#39;) then trigger openModal(&#39;"',
+            html,
+        )
         self.assertEqual(
             self._row_hyperscript(html),
             "on click trigger openModal(rowId: @data-row-id)",
@@ -82,6 +85,18 @@ class StickyHeaderTableMacroTests(unittest.TestCase):
                 with self.assertRaises(UndefinedError) as ctx:
                     self._render(self._clickable_params("row-1", rowClickEvent=bad))
                 self.assertIn("rowClickEvent must match", str(ctx.exception))
+
+    def test_invalid_row_click_event_is_ignored_when_rows_not_clickable(self):
+        params = {
+            "head": [{"text": "Name"}],
+            "rows": [{"id": "row-1", "cells": [{"text": "Alice"}]}],
+            "rowClickEvent": "bad-name",
+        }
+
+        html = self._render(params)
+
+        self.assertNotIn("_=", html)
+        self.assertNotIn("data-row-id", html)
 
 
 if __name__ == "__main__":
