@@ -109,16 +109,18 @@ class ModalMacroTests(unittest.TestCase):
         self.assertIn('data-dirty-message="Discard unsaved changes?"', overlay_tag)
 
     def test_dirty_message_cannot_inject_hyperscript(self):
-        html = self._render({"dirtyMessage": "ok') then fetch('/evil') then confirm('"})
+        payload = "ok') then fetch('/evil') then confirm('x\" _=\"on click fetch('/evil2')"
+        html = self._render({"dirtyMessage": payload})
         overlay_hs = self._overlay_hyperscript(html)
         overlay_tag = self._overlay_tag(html)
 
         self.assertNotIn("fetch(", overlay_hs)
-
+        self.assertEqual(overlay_tag.count('_="'), 1)
         match = re.search(r'data-dirty-message="([^"]*)"', overlay_tag)
         self.assertIsNotNone(match)
         value = match.group(1)
-        self.assertIn("&#39;", value)
+        self.assertIn("&#34;", value)
+        self.assertNotIn('"', value)
         self.assertNotIn("'", value)
 
     def test_overlay_clears_dirty_on_markModalClean(self):
