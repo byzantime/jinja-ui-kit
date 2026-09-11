@@ -25,6 +25,11 @@ class ModalMacroTests(unittest.TestCase):
         self.assertIsNotNone(match)
         return match.group(1)
 
+    def _overlay_hyperscript(self, html):
+        match = re.search(r'_="([^"]*)"', html)
+        self.assertIsNotNone(match)
+        return match.group(1)
+
     def test_fullscreen_sets_fixed_height_and_max_height(self):
         html = self._render({"size": "fullscreen"})
         style = self._style(html)
@@ -46,6 +51,45 @@ class ModalMacroTests(unittest.TestCase):
         self.assertIn("max-height: 90vh", style)
         self.assertNotIn("; height:", style)
         self.assertNotRegex(style, r"^height:")
+
+    def test_overlay_only_closes_on_click_that_started_on_backdrop(self):
+        html = self._render({})
+        overlay_hs = self._overlay_hyperscript(html)
+
+        self.assertIn("set :pressedBackdrop to (event.target is me)", overlay_hs)
+        self.assertIn("if :pressedBackdrop send closeModal to me end", overlay_hs)
+
+    def test_overlay_closeModal_handler_guards_on_dirty_with_confirm(self):
+        html = self._render({})
+        overlay_hs = self._overlay_hyperscript(html)
+
+        self.assertIn("on closeModal", overlay_hs)
+        self.assertIn("if :dirty", overlay_hs)
+        self.assertIn("confirm('Discard unsaved changes?')", overlay_hs)
+
+    def test_header_close_button_sends_closeModal(self):
+        html = self._render({"id": "modal"})
+
+        self.assertIn('_="on click send closeModal to #modal"', html)
+
+    def test_enable_keyboard_close_false_omits_escape_handler(self):
+        html = self._render({"enableKeyboardClose": False})
+        overlay_hs = self._overlay_hyperscript(html)
+
+        self.assertNotIn("keydown[key=='Escape']", overlay_hs)
+
+    def test_enable_keyboard_close_default_includes_escape_handler(self):
+        html = self._render({})
+        overlay_hs = self._overlay_hyperscript(html)
+
+        self.assertIn("keydown[key=='Escape'] from document send closeModal to me", overlay_hs)
+
+    def test_custom_dirty_message_is_rendered(self):
+        html = self._render({"dirtyMessage": "Lose your edits?"})
+        overlay_hs = self._overlay_hyperscript(html)
+
+        self.assertIn("confirm('Lose your edits?')", overlay_hs)
+        self.assertNotIn("Discard unsaved changes?", overlay_hs)
 
 
 if __name__ == "__main__":

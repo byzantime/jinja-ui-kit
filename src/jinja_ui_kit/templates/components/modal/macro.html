@@ -14,6 +14,11 @@
   @param {boolean} [params.autoOpen=false] - Start the modal visible (flex) instead of hidden
   @param {boolean} [params.showCloseButton=true] - Render a close (✕) button in the header
   @param {boolean} [params.enableKeyboardClose=true] - Close on Escape key
+  @param {string} [params.dirtyMessage='Discard unsaved changes?'] - Confirmation prompt shown when closing a
+      modal that has unsaved input/change activity in it. Interpolated raw into a hyperscript single-quoted
+      string literal (the same, currently-undocumented, splicing pattern row_id/rowClickEvent already use in
+      the table macro), so a literal `'` in the message will break the whole overlay `_` attribute's parsing,
+      not just the confirm prompt.
   @param {string} [params.customClasses] - Extra CSS classes on the content panel
   @param {string} [params.headerClasses] - Extra CSS classes on the header div
   @param {string} [params.bodyClasses] - Extra CSS classes on the scrollable body div
@@ -40,6 +45,15 @@
   Modal opened via hyperscript:
   <button _="on click remove .hidden from #confirm-modal add .flex to #confirm-modal">Open</button>
 
+  Closing a modal: all built-in close paths (backdrop click, ✕ button, Escape) send a `closeModal` custom
+  event to the overlay, which guards the close with a confirm() prompt if the modal has been marked dirty
+  (any input/change inside it since it was last shown). Consumer Cancel buttons should do the same to get
+  the same guard:
+  <button _="on click send closeModal to #my-modal">Cancel</button>
+  Closing by toggling `.hidden`/`.flex` directly (as the "Modal opened via hyperscript" example above does
+  for opening) bypasses the dirty-check guard — fine for post-submit closes, not for a Cancel button on a
+  dirty form.
+
   Modal with HTMX body:
   {% call modal({'id': 'htmx-modal', 'title': 'Details', 'bodyId': 'htmx-modal-body'}) %}
     <div class="p-4 text-neutral-400">Loading…</div>
@@ -55,6 +69,7 @@
 {%- set autoOpen = params.autoOpen if params.autoOpen is defined else false -%}
 {%- set showCloseButton = params.showCloseButton if params.showCloseButton is defined else true -%}
 {%- set enableKeyboardClose = params.enableKeyboardClose if params.enableKeyboardClose is defined else true -%}
+{%- set dirtyMessage = params.dirtyMessage if params.dirtyMessage is defined and params.dirtyMessage else 'Discard unsaved changes?' -%}
 {%- set customClasses = params.customClasses if params.customClasses is defined else "" -%}
 {%- set headerClasses = params.headerClasses if params.headerClasses is defined else "" -%}
 {%- set bodyClasses = params.bodyClasses if params.bodyClasses is defined else "" -%}
@@ -78,18 +93,18 @@
 <div
   id="{{ id }}"
   class="fixed inset-0 z-50 items-center justify-center {{ 'flex' if autoOpen else 'hidden' }} bg-black bg-opacity-50"
-  {% if enableKeyboardClose %}
-  _="on click
+  _="on mousedown set :pressedBackdrop to (event.target is me)
+     on click if :pressedBackdrop send closeModal to me end
+     on input or change if I do not match .hidden set :dirty to true end
+     on mutation of @class if I do not match .hidden set :dirty to false end
+     {% if enableKeyboardClose %}on keydown[key=='Escape'] from document send closeModal to me{% endif %}
+     on closeModal
+       if :dirty
+         if not confirm('{{ dirtyMessage }}') halt end
+       end
        add .hidden to me
        remove .flex from me
-     on keydown[key=='Escape'] from document
-       add .hidden to me
-       remove .flex from me"
-  {% else %}
-  _="on click
-       add .hidden to me
-       remove .flex from me"
-  {% endif %}
+       set :dirty to false"
   {{- attributes(params.attributes) -}}>
 
   <!-- Modal Content -->
@@ -125,9 +140,7 @@
         <button
           type="button"
           class="text-neutral-400 transition-colors hover:text-neutral-600"
-          _="on click
-               add .hidden to #{{ id }}
-               remove .flex from #{{ id }}">
+          _="on click send closeModal to #{{ id }}">
           <i class="text-xl fa-solid fa-times"></i>
         </button>
         {% endif %}
