@@ -16,8 +16,9 @@
   @param {boolean} [params.enableKeyboardClose=true] - Close on Escape key
   @param {string} [params.dirtyMessage='Discard unsaved changes?'] - Confirmation prompt shown when closing a
       modal that has unsaved input/change activity in it. Interpolated raw into a hyperscript single-quoted
-      string literal, so a literal `'` in the message will break parsing (same caveat as row_id/rowClickEvent
-      in the table macro).
+      string literal (the same, currently-undocumented, splicing pattern row_id/rowClickEvent already use in
+      the table macro), so a literal `'` in the message will break the whole overlay `_` attribute's parsing,
+      not just the confirm prompt.
   @param {string} [params.customClasses] - Extra CSS classes on the content panel
   @param {string} [params.headerClasses] - Extra CSS classes on the header div
   @param {string} [params.bodyClasses] - Extra CSS classes on the scrollable body div
@@ -92,30 +93,18 @@
 <div
   id="{{ id }}"
   class="fixed inset-0 z-50 items-center justify-center {{ 'flex' if autoOpen else 'hidden' }} bg-black bg-opacity-50"
-  {% if enableKeyboardClose %}
   _="on mousedown set :pressedBackdrop to (event.target is me)
      on click if :pressedBackdrop send closeModal to me end
-     on input or change set :dirty to true
+     on input or change if I do not match .hidden set :dirty to true end
      on mutation of @class if I do not match .hidden set :dirty to false end
-     on keydown[key=='Escape'] from document send closeModal to me
+     {% if enableKeyboardClose %}on keydown[key=='Escape'] from document send closeModal to me{% endif %}
      on closeModal
        if :dirty
          if not confirm('{{ dirtyMessage }}') halt end
        end
        add .hidden to me
-       remove .flex from me"
-  {% else %}
-  _="on mousedown set :pressedBackdrop to (event.target is me)
-     on click if :pressedBackdrop send closeModal to me end
-     on input or change set :dirty to true
-     on mutation of @class if I do not match .hidden set :dirty to false end
-     on closeModal
-       if :dirty
-         if not confirm('{{ dirtyMessage }}') halt end
-       end
-       add .hidden to me
-       remove .flex from me"
-  {% endif %}
+       remove .flex from me
+       set :dirty to false"
   {{- attributes(params.attributes) -}}>
 
   <!-- Modal Content -->
