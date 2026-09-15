@@ -128,6 +128,48 @@ class FormFieldDefaultClassesTests(unittest.TestCase):
         self.assertIn("text-neutral-700", classes)
         self.assertIn("custom-class", classes)
 
+    def test_text_affix_is_hidden_from_assistive_technology(self):
+        html = self._render(
+            "input",
+            {
+                "name": "price",
+                "label": {"text": "Price"},
+                "suffix": {"text": "kg"},
+            },
+        )
+
+        self.assertRegex(html, r'<div[^>]*aria-hidden="true"[^>]*>\s*kg\s*</div>')
+
+    def test_html_affix_is_not_hidden_from_assistive_technology(self):
+        html = self._render(
+            "input",
+            {
+                "name": "public",
+                "label": {"text": "Public"},
+                "suffix": {
+                    "html": '<label for="public"><input type="checkbox"></label>'
+                },
+            },
+        )
+
+        self.assertNotIn('aria-hidden="true"', html)
+        self.assertIn('<input type="checkbox">', html)
+
+    def test_html_affix_can_still_opt_into_being_hidden(self):
+        html = self._render(
+            "input",
+            {
+                "name": "search",
+                "label": {"text": "Search"},
+                "prefix": {
+                    "html": '<i class="icon"></i>',
+                    "attributes": {"aria-hidden": "true"},
+                },
+            },
+        )
+
+        self.assertIn('aria-hidden="true"', html)
+
     def test_textarea_still_ships_default_classes(self):
         html = self._render("textarea", {"name": "bio", "label": {"text": "Bio"}})
         classes = self._classes(html, "textarea")
