@@ -32,8 +32,8 @@
 {% set classes = params.classes or '' %}
 <details class="group w-full border border-neutral-200 rounded-lg bg-white{{ ' ' ~ classes if classes else '' }}"
   {{- attributes({
-    'id': { 'value': params.id, 'optional': true },
-    'open': { 'value': params.open, 'optional': true }
+    'id': { 'value': params.id if params.id else false, 'optional': true },
+    'open': { 'value': true if params.open else false, 'optional': true }
   }) -}}
   {{- attributes(params.attributes) }}>
   <summary class="flex items-center justify-between gap-2 px-4 py-3 font-medium text-neutral-900 cursor-pointer select-none list-none hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset [&::-webkit-details-marker]:hidden">

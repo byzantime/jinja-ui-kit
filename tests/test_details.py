@@ -46,6 +46,18 @@ class DetailsMacroTests(unittest.TestCase):
 
         self.assertIn(" open", self._details_tag(html))
 
+    def test_open_falsey_values_are_omitted(self):
+        for value in (False, 0, "", []):
+            with self.subTest(open=value):
+                html = self._render({"summaryText": "Summary", "open": value})
+
+                self.assertNotIn(" open", self._details_tag(html))
+
+    def test_empty_id_is_omitted(self):
+        html = self._render({"id": "", "summaryText": "Summary"})
+
+        self.assertNotIn("id=", self._details_tag(html))
+
     def test_summary_text_is_escaped(self):
         html = self._render({"summaryText": "<b>Help</b>", "text": "Body"})
 
