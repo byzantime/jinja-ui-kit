@@ -29,20 +29,21 @@
 #}
 {% macro details(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% import "jinja_ui_kit/theme.html" as theme %}
 {% set classes = params.classes or '' %}
-<details class="group w-full border border-neutral-200 rounded-lg bg-white{{ ' ' ~ classes if classes else '' }}"
+<details class="{{ theme.details_wrapper }}{{ ' ' ~ classes if classes else '' }}"
   {{- attributes({
     'id': { 'value': params.id if params.id else false, 'optional': true },
     'open': { 'value': true if params.open else false, 'optional': true }
   }) -}}
   {{- attributes(params.attributes) }}>
-  <summary class="flex items-center justify-between gap-2 px-4 py-3 font-medium text-neutral-900 cursor-pointer select-none list-none hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset [&::-webkit-details-marker]:hidden">
+  <summary class="{{ theme.details_summary | safe }}">
     <span>{{ params.summaryHtml | safe if params.summaryHtml else params.summaryText }}</span>
-    <svg class="w-4 h-4 shrink-0 transform transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <svg class="{{ theme.details_chevron }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
     </svg>
   </summary>
-  <div class="px-4 py-3 border-t border-neutral-200 text-sm text-neutral-700">
+  <div class="{{ theme.details_content }}">
     {% if caller %}{{ caller() }}{% else %}{{ params.html | safe if params.html else params.text }}{% endif %}
   </div>
 </details>

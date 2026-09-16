@@ -29,6 +29,7 @@
 
 {% macro accordion(params) %}
 {% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% import "jinja_ui_kit/theme.html" as theme %}
 
 {% set sections = params.sections %}
 {% set id_prefix = params.id_prefix or 'accordion' %}
@@ -36,7 +37,7 @@
 {% set compact = params.compact or False %}
 {% set classes = params.classes or '' %}
 {% set wrapper_attributes = params.attributes or {} %}
-<div class="w-full space-y-1{{ ' ' ~ classes if classes else '' }}"
+<div class="{{ theme.accordion_wrapper }}{{ ' ' ~ classes if classes else '' }}"
   {{- attributes(wrapper_attributes) }}>
  {% for section in sections %}
    {% set section_id = id_prefix ~ '-' ~ loop.index %}
@@ -49,10 +50,10 @@
      {% set is_open = default_open is sameas true or (default_open is not sameas false and loop.index0 == default_open) %}
    {% endif %}
 
-   <div class="overflow-hidden border border-neutral-200 rounded-lg">
+   <div class="{{ theme.accordion_panel }}">
      <button
        id="{{ section_id }}-header"
-       class="flex items-center justify-between w-full {{ 'py-2 px-3' if compact else 'p-4' }} font-medium text-left bg-neutral-50 hover:bg-neutral-100 focus:outline-none focus:ring-1 focus:ring-primary-300"
+       class="{{ theme.accordion_header_base }} {{ theme.accordion_padding_compact if compact else theme.accordion_padding_default }}"
        aria-expanded="{{ 'true' if is_open else 'false' }}"
        aria-controls="{{ content_id }}"
        _="on click or toggle_accordion
@@ -60,15 +61,15 @@
            toggle .hidden on #{{ content_id }}
            toggle .rotate-180 on .transform in me
        ">
-       <span class="text-sm">{{ section['title'] }}</span>
-       <svg class="w-4 h-4 transform transition-transform duration-200 {{ 'rotate-180' if is_open else '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+       <span class="{{ theme.accordion_title }}">{{ section['title'] }}</span>
+       <svg class="{{ theme.accordion_chevron }}{{ ' rotate-180' if is_open else '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
        </svg>
      </button>
 
      <div
        id="{{ content_id }}"
-       class="bg-white {{ 'py-2 px-3' if compact else 'p-4' }} {{ 'hidden' if not is_open else '' }}"
+       class="{{ theme.accordion_content_base }} {{ theme.accordion_padding_compact if compact else theme.accordion_padding_default }}{{ ' hidden' if not is_open else '' }}"
        aria-labelledby="{{ section_id }}-header">
        {{ section['content'] }}
      </div>

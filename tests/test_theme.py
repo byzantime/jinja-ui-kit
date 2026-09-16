@@ -56,6 +56,21 @@ class ThemeOverrideTests(unittest.TestCase):
 {% set select_border_neutral = "select-border-neutral-custom" %}
 {% set select_border_error = "select-border-error-custom" %}
 {% set label_base = "label-custom" %}
+{% set accordion_wrapper = "accordion-wrapper-custom" %}
+{% set accordion_panel = "accordion-panel-custom" %}
+{% set accordion_header_base = "accordion-header-base-custom" %}
+{% set accordion_padding_compact = "accordion-padding-compact-custom" %}
+{% set accordion_padding_default = "accordion-padding-default-custom" %}
+{% set accordion_content_base = "accordion-content-base-custom" %}
+{% set accordion_title = "accordion-title-custom" %}
+{% set accordion_chevron = "accordion-chevron-custom" %}
+{% set details_wrapper = "details-wrapper-custom" %}
+{% set details_summary = "details-summary-custom" %}
+{% set details_chevron = "details-chevron-custom" %}
+{% set details_content = "details-content-custom" %}
+{% set error_summary_wrapper = "error-summary-wrapper-custom" %}
+{% set error_summary_heading = "error-summary-heading-custom" %}
+{% set error_summary_list = "error-summary-list-custom" %}
 """
                     }
                 )
@@ -120,6 +135,64 @@ class ThemeOverrideTests(unittest.TestCase):
         )
         self.assertIn("label-custom", html)
         self.assertNotIn("text-neutral-700", html)
+
+    def test_shadowed_theme_replaces_accordion_defaults(self):
+        html = render(
+            self.env,
+            '{% from "jinja_ui_kit/components/accordion/macro.html" import accordion %}'
+            "{{ accordion({'sections': [{'title': 'T', 'content': 'C'}]}) }}",
+        )
+        self.assertIn("accordion-wrapper-custom", html)
+        self.assertIn("accordion-panel-custom", html)
+        self.assertIn("accordion-header-base-custom", html)
+        self.assertIn("accordion-padding-default-custom", html)
+        self.assertIn("accordion-content-base-custom", html)
+        self.assertIn("accordion-title-custom", html)
+        self.assertIn("accordion-chevron-custom", html)
+        self.assertNotIn("space-y-1", html)
+        self.assertNotIn("border-neutral-200", html)
+        self.assertNotIn("rounded-lg", html)
+        self.assertNotIn("p-4", html)
+        self.assertNotIn("text-sm", html)
+
+    def test_shadowed_theme_replaces_accordion_compact_padding(self):
+        html = render(
+            self.env,
+            '{% from "jinja_ui_kit/components/accordion/macro.html" import accordion %}'
+            "{{ accordion({'sections': [{'title': 'T', 'content': 'C'}], 'compact': true}) }}",
+        )
+        self.assertIn("accordion-padding-compact-custom", html)
+        self.assertNotIn("py-2 px-3", html)
+
+    def test_shadowed_theme_replaces_details_defaults(self):
+        html = render(
+            self.env,
+            '{% from "jinja_ui_kit/components/details/macro.html" import details %}'
+            "{{ details({'summaryText': 'S', 'text': 'B'}) }}",
+        )
+        self.assertIn("details-wrapper-custom", html)
+        self.assertIn("details-summary-custom", html)
+        self.assertIn("details-chevron-custom", html)
+        self.assertIn("details-content-custom", html)
+        self.assertNotIn("[&::-webkit-details-marker]:hidden", html)
+        self.assertNotIn("px-4", html)
+        self.assertNotIn("border-neutral-200", html)
+        self.assertNotIn("group w-full", html)
+
+    def test_shadowed_theme_replaces_error_summary_defaults(self):
+        html = render(
+            self.env,
+            '{% from "jinja_ui_kit/components/error-summary/macro.html" import errorSummary %}'
+            "{{ errorSummary({'titleText': 'There is a problem', "
+            "'errorList': [{'text': 'E'}]}) }}",
+        )
+        self.assertIn("error-summary-wrapper-custom", html)
+        self.assertIn("error-summary-heading-custom", html)
+        self.assertIn("error-summary-list-custom", html)
+        self.assertNotIn("border-l-4", html)
+        self.assertNotIn("p-4", html)
+        self.assertNotIn("mb-6", html)
+        self.assertNotIn("pl-5", html)
 
 
 if __name__ == "__main__":
