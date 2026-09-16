@@ -1,0 +1,49 @@
+{#
+  Renders a native <details>/<summary> disclosure widget. No JS/hyperscript —
+  expand/collapse and the chevron rotation are both handled by the browser via
+  the native [open] state (Tailwind's `group-open:` variant).
+
+  @param {object} params - Configuration object for the details component
+  @param {string} [params.id] - ID attribute on the <details> element
+  @param {string} [params.classes] - Additional CSS classes on the <details> element
+  @param {object} [params.attributes] - Additional HTML attributes on the <details> element
+  @param {boolean} [params.open=false] - Render expanded by default
+  @param {string} [params.summaryText] - Summary text (escaped)
+  @param {string} [params.summaryHtml] - Summary HTML (takes precedence over summaryText)
+  @param {string} [params.text] - Body text (escaped), used when no caller() block is given
+  @param {string} [params.html] - Body HTML (takes precedence over text), used when no caller() block is given
+
+  Examples:
+  {% from "jinja_ui_kit/components/details/macro.html" import details %}
+
+  Basic details with text body:
+  {{ details({
+    "summaryText": "Help with nationality",
+    "text": "We need to know your nationality so we can work out which forms you need."
+  }) }}
+
+  Open by default with a caller() body:
+  {% call details({"summaryText": "Help with nationality", "open": true}) %}
+    <p>We need to know your nationality so we can work out which forms you need.</p>
+  {% endcall %}
+#}
+{% macro details(params) %}
+{% from "jinja_ui_kit/macros/attributes.html" import attributes %}
+{% set classes = params.classes or '' %}
+<details class="group w-full border border-neutral-200 rounded-lg bg-white{{ ' ' ~ classes if classes else '' }}"
+  {{- attributes({
+    'id': { 'value': params.id, 'optional': true },
+    'open': { 'value': params.open, 'optional': true }
+  }) -}}
+  {{- attributes(params.attributes) }}>
+  <summary class="flex items-center justify-between gap-2 px-4 py-3 font-medium text-neutral-900 cursor-pointer select-none list-none hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset [&::-webkit-details-marker]:hidden">
+    <span>{{ params.summaryHtml | safe if params.summaryHtml else params.summaryText }}</span>
+    <svg class="w-4 h-4 shrink-0 transform transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+    </svg>
+  </summary>
+  <div class="px-4 py-3 border-t border-neutral-200 text-sm text-neutral-700">
+    {% if caller %}{{ caller() }}{% else %}{{ params.html | safe if params.html else params.text }}{% endif %}
+  </div>
+</details>
+{% endmacro %}
