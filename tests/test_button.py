@@ -98,6 +98,32 @@ class ButtonMacroTests(unittest.TestCase):
         self.assertNotIn('_="', html)
         self.assertIn('data-prevent-double-click="true"', html)
 
+    def test_prevent_double_click_preserves_other_caller_attributes(self):
+        html = self._render(
+            {
+                "text": "Save and continue",
+                "preventDoubleClick": True,
+                "attributes": {"data-testid": "save-button"},
+            }
+        )
+
+        script = self._hyperscript(html)
+        self.assertIn("is-submitting", script)
+        self.assertIn('data-testid="save-button"', html)
+
+    def test_prevent_double_click_skipped_for_prerendered_string_attributes(self):
+        html = self._render(
+            {
+                "text": "Save and continue",
+                "preventDoubleClick": True,
+                "attributes": 'data-testid="save-button"',
+            }
+        )
+
+        self.assertNotIn('_="', html)
+        self.assertIn('data-testid="save-button"', html)
+        self.assertIn('data-prevent-double-click="true"', html)
+
 
 if __name__ == "__main__":
     unittest.main()
