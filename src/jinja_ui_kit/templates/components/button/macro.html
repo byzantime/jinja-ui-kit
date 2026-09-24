@@ -10,18 +10,7 @@
   @param {boolean} [params.isStart=false] - Renders as a start button with arrow icon
   @param {string} [params.variant='primary'] - Button variant: 'primary', 'secondary', 'warning', 'inverse'
   @param {boolean} [params.disabled=false] - Disables the button
-  @param {boolean} [params.preventDoubleClick=false] - Prevents double-click submissions. Renders
-    `data-prevent-double-click="true"` (unread by this kit's CSS-only bundle) plus a hyperscript `_`
-    guard, so it requires `_hyperscript` to be loaded on the page. On click, the guard halts the
-    event if the button's form already has an in-flight submission (blocking other opted-in submit
-    buttons in the same form too); on submit it disables the clicked button after a `wait 0s` tick
-    (so its `name`/`value` are still sent) until `htmx:after:request` fires on the form. When
-    `params.attributes` is a dict (or is omitted/falsy), a caller-supplied `params.attributes._` is
-    merged (prepended) rather than overwritten. When `params.attributes` is a non-empty pre-rendered
-    string (see `macros/attributes.html`'s string-passthrough mode), the guard and a string-embedded
-    `_` are mutually exclusive: the guard is only merged for dict-form (or empty) `attributes`, and a
-    non-empty string is left as-is with no guard added. Not applied to the `<a>` branch, since
-    anchors aren't form submitters.
+  @param {boolean} [params.preventDoubleClick=false] - Adds a hyperscript guard (requires `_hyperscript`) that blocks repeat submits from `<button>`/`<input>` until `htmx:after:request`.
   @param {string} [params.classes] - Additional CSS classes
   @param {object} [params.attributes] - Additional HTML attributes
   @param {string} [params.name] - Name attribute for input elements
