@@ -58,14 +58,41 @@ class ModalMacroTests(unittest.TestCase):
         self.assertNotRegex(style, r"^height:")
 
     def test_overlay_only_closes_on_click_that_started_on_backdrop(self):
-        html = self._render({})
-        overlay_hs = self._overlay_hyperscript(html)
+        for params in ({}, {"enableDirtyGuard": True}):
+            with self.subTest(params=params):
+                overlay_hs = self._overlay_hyperscript(self._render(params))
 
-        self.assertIn("set :pressedBackdrop to (event.target is me)", overlay_hs)
+                self.assertIn("set :pressedBackdrop to (event.target is me)", overlay_hs)
+                self.assertIn("if :pressedBackdrop send closeModal to me end", overlay_hs)
+
+    def _assert_closes_without_guard(self, html):
+        overlay_hs = self._overlay_hyperscript(html)
+        overlay_tag = self._overlay_tag(html)
+
+        self.assertNotIn(":dirty", overlay_hs)
+        self.assertNotIn("confirm", overlay_hs)
+        self.assertNotIn("markModalClean", overlay_hs)
+        self.assertNotIn("data-dirty-message", overlay_tag)
+
+        # All three close paths still send closeModal, which closes unconditionally.
+        self.assertIn('_="on click send closeModal to #modal"', html)
         self.assertIn("if :pressedBackdrop send closeModal to me end", overlay_hs)
+        self.assertIn("keydown[key=='Escape'] from document send closeModal to me", overlay_hs)
+        close_hs = overlay_hs[overlay_hs.index("on closeModal"):]
+        self.assertIn("if I match .hidden exit end", close_hs)
+        self.assertIn("add .hidden to me", close_hs)
+        self.assertIn("remove .flex from me", close_hs)
+
+    def test_dirty_guard_is_off_by_default(self):
+        self._assert_closes_without_guard(self._render({}))
+
+    def test_dirty_guard_disabled_ignores_dirty_message(self):
+        self._assert_closes_without_guard(
+            self._render({"enableDirtyGuard": False, "dirtyMessage": "x"})
+        )
 
     def test_overlay_closeModal_handler_guards_on_dirty_with_confirm(self):
-        html = self._render({})
+        html = self._render({"enableDirtyGuard": True})
         overlay_hs = self._overlay_hyperscript(html)
 
         self.assertIn("on closeModal", overlay_hs)
@@ -96,21 +123,21 @@ class ModalMacroTests(unittest.TestCase):
         self.assertIn("keydown[key=='Escape'] from document send closeModal to me", overlay_hs)
 
     def test_custom_dirty_message_is_rendered(self):
-        html = self._render({"dirtyMessage": "Lose your edits?"})
+        html = self._render({"enableDirtyGuard": True, "dirtyMessage": "Lose your edits?"})
         overlay_tag = self._overlay_tag(html)
 
         self.assertIn('data-dirty-message="Lose your edits?"', overlay_tag)
         self.assertNotIn("Discard unsaved changes?", overlay_tag)
 
     def test_default_dirty_message_is_rendered(self):
-        html = self._render({})
+        html = self._render({"enableDirtyGuard": True})
         overlay_tag = self._overlay_tag(html)
 
         self.assertIn('data-dirty-message="Discard unsaved changes?"', overlay_tag)
 
     def test_dirty_message_cannot_inject_hyperscript(self):
         payload = "ok') then fetch('/evil') then confirm('x\" _=\"on click fetch('/evil2')"
-        html = self._render({"dirtyMessage": payload})
+        html = self._render({"enableDirtyGuard": True, "dirtyMessage": payload})
         overlay_hs = self._overlay_hyperscript(html)
         overlay_tag = self._overlay_tag(html)
 
@@ -124,13 +151,13 @@ class ModalMacroTests(unittest.TestCase):
         self.assertNotIn("'", value)
 
     def test_overlay_clears_dirty_on_markModalClean(self):
-        html = self._render({})
+        html = self._render({"enableDirtyGuard": True})
         overlay_hs = self._overlay_hyperscript(html)
 
         self.assertIn("on markModalClean set :dirty to false", overlay_hs)
 
     def test_class_mutation_always_clears_dirty(self):
-        html = self._render({})
+        html = self._render({"enableDirtyGuard": True})
         overlay_hs = self._overlay_hyperscript(html)
 
         self.assertIn("on mutation of @class set :dirty to false", overlay_hs)

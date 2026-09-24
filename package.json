@@ -1,6 +1,6 @@
 {
   "name": "jinja-ui-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Build tools for jinja-ui-kit CSS generation",
   "private": true,
   "scripts": {

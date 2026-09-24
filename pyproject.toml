@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "jinja-ui-kit"
-version = "0.1.0"
+version = "0.2.0"
 description = "A collection of reusable Jinja2 macros for building web application UIs with Tailwind CSS styling"
 dependencies = [
     "Jinja2>=3.0"
