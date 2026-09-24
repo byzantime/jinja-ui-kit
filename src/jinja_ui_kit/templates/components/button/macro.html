@@ -10,7 +10,17 @@
   @param {boolean} [params.isStart=false] - Renders as a start button with arrow icon
   @param {string} [params.variant='primary'] - Button variant: 'primary', 'secondary', 'warning', 'inverse'
   @param {boolean} [params.disabled=false] - Disables the button
-  @param {boolean} [params.preventDoubleClick=false] - Prevents double-click submissions
+  @param {boolean} [params.preventDoubleClick=false] - Prevents double-click submissions. Renders
+    `data-prevent-double-click="true"` (unread by this kit's CSS-only bundle) plus a hyperscript `_`
+    guard, so it requires `_hyperscript` to be loaded on the page. On click, the guard halts the
+    event if the button's form already has an in-flight submission (blocking other opted-in submit
+    buttons in the same form too); on submit it disables the clicked button after a `wait 0s` tick
+    (so its `name`/`value` are still sent) until `htmx:after:request` fires on the form. When
+    `params.attributes` is a dict, a caller-supplied `params.attributes._` is merged (prepended)
+    rather than overwritten. When `params.attributes` is a pre-rendered string (see
+    `macros/attributes.html`'s string-passthrough mode), the guard and a string-embedded `_` are
+    mutually exclusive: the guard is only merged for dict-form `attributes` and the string is left
+    as-is. Not applied to the `<a>` branch, since anchors aren't form submitters.
   @param {string} [params.classes] - Additional CSS classes
   @param {object} [params.attributes] - Additional HTML attributes
   @param {string} [params.name] - Name attribute for input elements
@@ -71,6 +81,23 @@
 {#- Add disabled classes -#}
 {% set disabledClasses = theme.button_disabled if params.disabled else "" %}
 
+{#- Merge a preventDoubleClick hyperscript guard into params.attributes (dict form only) -#}
+{% set mergedAttributes = params.attributes %}
+{% if params.preventDoubleClick %}
+  {%- set guardScript -%}
+on click if (my form) matches .is-submitting halt the event end
+on submit from my form add .is-submitting to my form then wait 0s then add @disabled to me then wait for htmx:after:request from my form then remove @disabled from me then remove .is-submitting from my form
+  {%- endset %}
+  {% if params.attributes is mapping and params.attributes['_'] %}
+    {% set guardScript = params.attributes['_'] ~ "\n" ~ guardScript %}
+  {% endif %}
+  {% if params.attributes is mapping %}
+    {% set mergedAttributes = dict(params.attributes, _=guardScript) %}
+  {% elif not params.attributes %}
+    {% set mergedAttributes = {'_': guardScript} %}
+  {% endif %}
+{% endif %}
+
 {#- Combine all classes -#}
 {% set classNames = baseClasses ~ " " ~ variantClasses %}
 {% if disabledClasses %}
@@ -130,7 +157,7 @@
       'optional': true
     }
   }) -}}
-  {{- attributes(params.attributes) }}
+  {{- attributes(mergedAttributes) }}
   {%- if params.preventDoubleClick %} data-prevent-double-click="true"{% endif -%}
 >
 {% else %}
@@ -155,7 +182,7 @@
       'optional': true
     }
   }) -}}
-  {{- attributes(params.attributes) }}
+  {{- attributes(mergedAttributes) }}
   {%- if params.preventDoubleClick %} data-prevent-double-click="true"{% endif -%}
 >
   {{- params.html | safe if params.html else params.text -}}
