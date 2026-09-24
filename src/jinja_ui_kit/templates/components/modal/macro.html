@@ -14,10 +14,13 @@
   @param {boolean} [params.autoOpen=false] - Start the modal visible (flex) instead of hidden
   @param {boolean} [params.showCloseButton=true] - Render a close (✕) button in the header
   @param {boolean} [params.enableKeyboardClose=true] - Close on Escape key
+  @param {boolean} [params.enableDirtyGuard=false] - Ask "Discard unsaved changes?" (via confirm()) before
+      closing a modal that has had input/change activity in it. Off by default: every close path closes
+      straight away. `dirtyMessage` and `markModalClean` only apply when this is on.
   @param {string} [params.dirtyMessage='Discard unsaved changes?'] - Confirmation prompt shown when closing a
-      modal that has unsaved input/change activity in it. Rendered as the overlay's `data-dirty-message`
-      attribute and read by hyperscript at confirm time, so the message never enters hyperscript source and
-      any text is safe, including user-derived values.
+      modal that has unsaved input/change activity in it (only with `enableDirtyGuard`). Rendered as the
+      overlay's `data-dirty-message` attribute and read by hyperscript at confirm time, so the message never
+      enters hyperscript source and any text is safe, including user-derived values.
   @param {string} [params.customClasses] - Extra CSS classes on the content panel
   @param {string} [params.headerClasses] - Extra CSS classes on the header div
   @param {string} [params.bodyClasses] - Extra CSS classes on the scrollable body div
@@ -25,8 +28,8 @@
   @param {string} [params.footerHtml] - HTML rendered in a non-scrolling footer below the body. For complex
       Jinja content (forms, macros), capture with {% set footer %}...{% endset %} and pass the variable.
   @param {string} [params.footerClasses] - Extra CSS classes on the footer div
-  @param {object} [params.attributes] - Additional HTML attributes on the overlay element. `data-dirty-message`
-      is reserved for the dirty prompt and is set from `dirtyMessage`.
+  @param {object} [params.attributes] - Additional HTML attributes on the overlay element. When `enableDirtyGuard`
+      is on, `data-dirty-message` is reserved for the dirty prompt and is set from `dirtyMessage`.
 
   Usage:
   {% from "jinja_ui_kit/components/modal/macro.html" import modal %}
@@ -46,12 +49,12 @@
   <button _="on click remove .hidden from #confirm-modal add .flex to #confirm-modal">Open</button>
 
   Events: the overlay listens for two custom events.
-  - `closeModal` (inbound): runs the built-in close path, guarded by a confirm() prompt if the modal has
-    been marked dirty (any input/change inside it since it was last shown). It is a no-op when the overlay
-    is already `.hidden`. All built-in close paths (backdrop click, ✕ button, Escape) send it, and consumer
-    Cancel buttons should send it to get the same guard:
+  - `closeModal` (inbound): runs the built-in close path. With `enableDirtyGuard` on, it is guarded by a
+    confirm() prompt if the modal has been marked dirty (any input/change inside it since it was last shown).
+    It is a no-op when the overlay is already `.hidden`. All built-in close paths (backdrop click, ✕ button,
+    Escape) send it, and consumer Cancel buttons should send it to get the same behaviour:
     <button _="on click send closeModal to #my-modal">Cancel</button>
-  - `markModalClean` (inbound): clears the dirty flag. Send it after a save that keeps the modal open, so the
+  - `markModalClean` (inbound, `enableDirtyGuard` only): clears the dirty flag. Send it after a save that keeps the modal open, so the
     next close does not falsely offer to discard. `:dirty` lives on the overlay, so swapping the body does
     not reset it.
     hyperscript: send markModalClean to #my-modal
@@ -76,6 +79,7 @@
 {%- set autoOpen = params.autoOpen if params.autoOpen is defined else false -%}
 {%- set showCloseButton = params.showCloseButton if params.showCloseButton is defined else true -%}
 {%- set enableKeyboardClose = params.enableKeyboardClose if params.enableKeyboardClose is defined else true -%}
+{%- set enableDirtyGuard = params.enableDirtyGuard if params.enableDirtyGuard is defined else false -%}
 {%- set dirtyMessage = params.dirtyMessage if params.dirtyMessage is defined and params.dirtyMessage else 'Discard unsaved changes?' -%}
 {%- set customClasses = params.customClasses if params.customClasses is defined else "" -%}
 {%- set headerClasses = params.headerClasses if params.headerClasses is defined else "" -%}
@@ -102,19 +106,19 @@
   class="fixed inset-0 z-50 items-center justify-center {{ 'flex' if autoOpen else 'hidden' }} bg-black bg-opacity-50"
   _="on mousedown set :pressedBackdrop to (event.target is me)
      on click if :pressedBackdrop send closeModal to me end
-     on input or change if I do not match .hidden set :dirty to true end
+     {% if enableDirtyGuard %}on input or change if I do not match .hidden set :dirty to true end
      on mutation of @class set :dirty to false end
-     on markModalClean set :dirty to false end
+     on markModalClean set :dirty to false end{% endif %}
      {% if enableKeyboardClose %}on keydown[key=='Escape'] from document send closeModal to me{% endif %}
      on closeModal
        if I match .hidden exit end
-       if :dirty
+       {% if enableDirtyGuard %}if :dirty
          if not confirm(@data-dirty-message) halt end
        end
-       add .hidden to me
-       remove .flex from me
-       set :dirty to false"
-  data-dirty-message="{{ dirtyMessage }}"
+       {% endif %}add .hidden to me
+       remove .flex from me{% if enableDirtyGuard %}
+       set :dirty to false{% endif %}"
+  {% if enableDirtyGuard %}data-dirty-message="{{ dirtyMessage }}"{% endif %}
   {{- attributes(params.attributes) -}}>
 
   <!-- Modal Content -->
