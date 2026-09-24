@@ -10,7 +10,7 @@
   @param {boolean} [params.isStart=false] - Renders as a start button with arrow icon
   @param {string} [params.variant='primary'] - Button variant: 'primary', 'secondary', 'warning', 'inverse'
   @param {boolean} [params.disabled=false] - Disables the button
-  @param {boolean} [params.preventDoubleClick=false] - Prevents double-click submissions
+  @param {boolean} [params.preventDoubleClick=false] - Adds a hyperscript guard (requires `_hyperscript`) that blocks repeat submits from `<button>`/`<input>` until `htmx:after:request`.
   @param {string} [params.classes] - Additional CSS classes
   @param {object} [params.attributes] - Additional HTML attributes
   @param {string} [params.name] - Name attribute for input elements
@@ -71,6 +71,20 @@
 {#- Add disabled classes -#}
 {% set disabledClasses = theme.button_disabled if params.disabled else "" %}
 
+{#- Merge a preventDoubleClick hyperscript guard into params.attributes (dict form only) -#}
+{% set mergedAttributes = params.attributes %}
+{% if params.preventDoubleClick and (not params.attributes or params.attributes is mapping) %}
+  {%- set guardScript -%}
+on click if (my form) matches .is-submitting halt the event end
+on submit from my form add .is-submitting to my form then wait 0s then add @disabled to me then wait for htmx:after:request from my form then remove @disabled from me then remove .is-submitting from my form
+  {%- endset %}
+  {% set baseAttributes = params.attributes if params.attributes is mapping else {} %}
+  {% if baseAttributes['_'] %}
+    {% set guardScript = baseAttributes['_'] ~ "\n" ~ guardScript %}
+  {% endif %}
+  {% set mergedAttributes = dict(baseAttributes, _=guardScript) %}
+{% endif %}
+
 {#- Combine all classes -#}
 {% set classNames = baseClasses ~ " " ~ variantClasses %}
 {% if disabledClasses %}
@@ -130,7 +144,7 @@
       'optional': true
     }
   }) -}}
-  {{- attributes(params.attributes) }}
+  {{- attributes(mergedAttributes) }}
   {%- if params.preventDoubleClick %} data-prevent-double-click="true"{% endif -%}
 >
 {% else %}
@@ -155,7 +169,7 @@
       'optional': true
     }
   }) -}}
-  {{- attributes(params.attributes) }}
+  {{- attributes(mergedAttributes) }}
   {%- if params.preventDoubleClick %} data-prevent-double-click="true"{% endif -%}
 >
   {{- params.html | safe if params.html else params.text -}}
