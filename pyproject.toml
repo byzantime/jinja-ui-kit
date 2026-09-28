@@ -9,10 +9,17 @@ description = "A collection of reusable Jinja2 macros for building web applicati
 dependencies = [
     "Jinja2>=3.0"
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 
 [project.urls]
 Homepage = "https://github.com/byzantime/jinja-ui-kit"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff==0.16.9",
+    "stifle==1.1.0",
+]
 
 [tool.flit.module]
 name = "jinja_ui_kit"
@@ -31,3 +38,9 @@ exclude = [
     "tailwind.config.js",
     "src/styles/",
 ]
+
+[tool.stifle]
+max-doc-lines = 7
+
+[tool.ruff]
+src = ["src", "tests"]

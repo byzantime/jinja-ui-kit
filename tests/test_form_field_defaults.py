@@ -14,8 +14,7 @@ class FormFieldDefaultClassesTests(unittest.TestCase):
         )
 
     def _classes(self, html, tag):
-        # Non-greedy up to the first whitespace-delimited `class`, so a custom
-        # attribute such as `data-class` is not mistaken for the class list.
+        """Return the class list, ignoring look-alike attributes such as `data-class`."""
         match = re.search(rf'<{tag}\b[^>]*?\sclass="([^"]*)"', html)
         self.assertIsNotNone(match)
         return match.group(1)
@@ -66,12 +65,11 @@ class FormFieldDefaultClassesTests(unittest.TestCase):
         self.assertIn("border-danger-500", classes)
         self.assertIn("focus:ring-danger-500", classes)
         self.assertNotIn("input--error", classes)
-        # border-neutral-300 must not coexist with border-danger-500: Tailwind
-        # resolves same-specificity utility clashes by generated-stylesheet
-        # order, not class-attribute order, so both present would silently
-        # pick whichever the build happens to emit last, hiding the error
-        # border regardless of html ordering.
-        self.assertNotIn("border-neutral-300", classes)
+        self.assertNotIn(
+            "border-neutral-300",
+            classes,
+            "Tailwind resolves clashing borders by stylesheet order, which could hide the error border",
+        )
 
     def test_select_ships_default_classes(self):
         html = self._render("select", {"name": "color", "items": []})

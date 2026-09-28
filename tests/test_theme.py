@@ -2,7 +2,9 @@ import unittest
 
 from jinja2 import ChoiceLoader, DictLoader, Environment, FileSystemLoader, PrefixLoader
 
-KIT_LOADER = PrefixLoader({"jinja_ui_kit": FileSystemLoader("src/jinja_ui_kit/templates")})
+KIT_LOADER = PrefixLoader(
+    {"jinja_ui_kit": FileSystemLoader("src/jinja_ui_kit/templates")}
+)
 
 
 def render(env, source):

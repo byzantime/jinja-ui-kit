@@ -45,9 +45,7 @@ def write_tailwind_content(output_path: str = "jinja_ui_kit_tailwind.js") -> Non
 
     Usage in tailwind.config.js:
         const { content: kitContent } = require('./jinja_ui_kit_tailwind.js');
-        module.exports = {
-            content: ['./src/templates/**/*.html', ...kitContent],
-        };
+        module.exports = { content: ['./src/templates/**/*.html', ...kitContent] };
     """
     template_glob = get_template_path() + "/**/*.html"
     content = (
