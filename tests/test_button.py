@@ -21,8 +21,7 @@ class ButtonMacroTests(unittest.TestCase):
         return template.render(params=params)
 
     def _classes(self, html, tag):
-        # Non-greedy up to the first whitespace-delimited `class`, so a custom
-        # attribute such as `data-class` is not mistaken for the class list.
+        """Return the class list, ignoring look-alike attributes such as `data-class`."""
         match = re.search(rf'<{tag}\b[^>]*?\sclass="([^"]*)"', html)
         self.assertIsNotNone(match)
         return match.group(1)

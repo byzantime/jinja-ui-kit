@@ -1,0 +1,10 @@
+schema = 1
+
+[setup]
+run = "uv sync"
+
+[jobs.test]
+run = "uv run pytest -q"
+
+[jobs.stifle]
+run = "uv run stifle check src tests"

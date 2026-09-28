@@ -74,7 +74,6 @@ class ModalMacroTests(unittest.TestCase):
         self.assertNotIn("markModalClean", overlay_hs)
         self.assertNotIn("data-dirty-message", overlay_tag)
 
-        # All three close paths still send closeModal, which closes unconditionally.
         self.assertIn('_="on click send closeModal to #modal"', html)
         self.assertIn("if :pressedBackdrop send closeModal to me end", overlay_hs)
         self.assertIn("keydown[key=='Escape'] from document send closeModal to me", overlay_hs)

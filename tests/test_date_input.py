@@ -60,7 +60,6 @@ class DateInputMacroTests(unittest.TestCase):
         )
 
         self.assertIn('id="dob-hint"', html)
-        # Fieldset and every input should reference the hint.
         self.assertEqual(html.count('aria-describedby="dob-hint"'), 4)
         self.assertIn('role="group"', html)
 
