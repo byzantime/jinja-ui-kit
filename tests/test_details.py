@@ -81,7 +81,11 @@ class DetailsMacroTests(unittest.TestCase):
 
     def test_caller_body_takes_precedence_over_text_and_html(self):
         html = self._render_call(
-            {"summaryText": "Summary", "text": "Ignored text", "html": "<b>Ignored</b>"},
+            {
+                "summaryText": "Summary",
+                "text": "Ignored text",
+                "html": "<b>Ignored</b>",
+            },
             body="<p>Caller wins</p>",
         )
 

@@ -1,6 +1,7 @@
-from jinja2 import Environment, FileSystemLoader, PrefixLoader, UndefinedError
 import re
 import unittest
+
+from jinja2 import Environment, FileSystemLoader, PrefixLoader, UndefinedError
 
 
 class StickyHeaderTableMacroTests(unittest.TestCase):
@@ -35,9 +36,7 @@ class StickyHeaderTableMacroTests(unittest.TestCase):
 
     def test_hostile_row_id_stays_in_autoescaped_data_attribute(self):
         hostile = "x\") then fetch('/evil') then trigger openModal('"
-        html = self._render(
-            self._clickable_params(hostile, rowClickEvent="openModal")
-        )
+        html = self._render(self._clickable_params(hostile, rowClickEvent="openModal"))
 
         self.assertIn(
             'data-row-id="x&#34;) then fetch(&#39;/evil&#39;) then trigger openModal(&#39;"',
@@ -55,9 +54,7 @@ class StickyHeaderTableMacroTests(unittest.TestCase):
         self.assertIn("on click trigger rowClicked(rowId: @data-row-id)", html)
 
     def test_custom_row_click_event_is_spliced(self):
-        html = self._render(
-            self._clickable_params("row-1", rowClickEvent="openModal")
-        )
+        html = self._render(self._clickable_params("row-1", rowClickEvent="openModal"))
 
         self.assertIn("on click trigger openModal(rowId: @data-row-id)", html)
 
@@ -73,9 +70,7 @@ class StickyHeaderTableMacroTests(unittest.TestCase):
         self.assertNotIn("data-row-id", html)
 
     def test_colon_namespaced_row_click_event_is_accepted(self):
-        html = self._render(
-            self._clickable_params("row-1", rowClickEvent="foo:bar")
-        )
+        html = self._render(self._clickable_params("row-1", rowClickEvent="foo:bar"))
 
         self.assertIn("on click trigger foo:bar(rowId: @data-row-id)", html)
 

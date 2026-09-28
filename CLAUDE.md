@@ -19,7 +19,14 @@ Settings live in `[tool.stifle]` in `pyproject.toml`; stifle is pinned in the `d
 uv sync                              # install the package plus dev tools
 uv run stifle check src tests        # lint gate
 uv run stifle format src tests       # delete violating comments/orphan strings in place
+uv run ruff check src tests          # ruff lint (add --fix to autofix)
+uv run ruff format src tests         # ruff formatter (gate uses --check)
 uv run pytest -q                     # tests
 ```
+
+## Ruff
+
+`ruff check` and `ruff format` run on `src` and `tests` with ruff's default rules; ruff is pinned in
+the `dev` dependency group and configured under `[tool.ruff]` in `pyproject.toml`.
 
 Checks run from `.sekreton/config.toml` (Sekreton gates), not a CI pipeline.

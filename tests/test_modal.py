@@ -62,8 +62,12 @@ class ModalMacroTests(unittest.TestCase):
             with self.subTest(params=params):
                 overlay_hs = self._overlay_hyperscript(self._render(params))
 
-                self.assertIn("set :pressedBackdrop to (event.target is me)", overlay_hs)
-                self.assertIn("if :pressedBackdrop send closeModal to me end", overlay_hs)
+                self.assertIn(
+                    "set :pressedBackdrop to (event.target is me)", overlay_hs
+                )
+                self.assertIn(
+                    "if :pressedBackdrop send closeModal to me end", overlay_hs
+                )
 
     def _assert_closes_without_guard(self, html):
         overlay_hs = self._overlay_hyperscript(html)
@@ -76,8 +80,10 @@ class ModalMacroTests(unittest.TestCase):
 
         self.assertIn('_="on click send closeModal to #modal"', html)
         self.assertIn("if :pressedBackdrop send closeModal to me end", overlay_hs)
-        self.assertIn("keydown[key=='Escape'] from document send closeModal to me", overlay_hs)
-        close_hs = overlay_hs[overlay_hs.index("on closeModal"):]
+        self.assertIn(
+            "keydown[key=='Escape'] from document send closeModal to me", overlay_hs
+        )
+        close_hs = overlay_hs[overlay_hs.index("on closeModal") :]
         self.assertIn("if I match .hidden exit end", close_hs)
         self.assertIn("add .hidden to me", close_hs)
         self.assertIn("remove .flex from me", close_hs)
@@ -119,10 +125,14 @@ class ModalMacroTests(unittest.TestCase):
         html = self._render({})
         overlay_hs = self._overlay_hyperscript(html)
 
-        self.assertIn("keydown[key=='Escape'] from document send closeModal to me", overlay_hs)
+        self.assertIn(
+            "keydown[key=='Escape'] from document send closeModal to me", overlay_hs
+        )
 
     def test_custom_dirty_message_is_rendered(self):
-        html = self._render({"enableDirtyGuard": True, "dirtyMessage": "Lose your edits?"})
+        html = self._render(
+            {"enableDirtyGuard": True, "dirtyMessage": "Lose your edits?"}
+        )
         overlay_tag = self._overlay_tag(html)
 
         self.assertIn('data-dirty-message="Lose your edits?"', overlay_tag)
@@ -135,7 +145,9 @@ class ModalMacroTests(unittest.TestCase):
         self.assertIn('data-dirty-message="Discard unsaved changes?"', overlay_tag)
 
     def test_dirty_message_cannot_inject_hyperscript(self):
-        payload = "ok') then fetch('/evil') then confirm('x\" _=\"on click fetch('/evil2')"
+        payload = (
+            "ok') then fetch('/evil') then confirm('x\" _=\"on click fetch('/evil2')"
+        )
         html = self._render({"enableDirtyGuard": True, "dirtyMessage": payload})
         overlay_hs = self._overlay_hyperscript(html)
         overlay_tag = self._overlay_tag(html)

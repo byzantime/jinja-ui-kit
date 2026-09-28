@@ -30,8 +30,8 @@ class DateInputMacroTests(unittest.TestCase):
         )
 
         for suffix in ("day", "month", "year"):
-            self.assertIn('name="dob-%s"' % suffix, html)
-            self.assertIn('id="dob-%s"' % suffix, html)
+            self.assertIn(f'name="dob-{suffix}"', html)
+            self.assertIn(f'id="dob-{suffix}"', html)
 
     def test_default_items_are_labelled_and_wrapped_in_fieldset(self):
         html = self._render(

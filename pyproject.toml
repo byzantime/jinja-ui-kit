@@ -15,7 +15,11 @@ requires-python = ">=3.12"
 Homepage = "https://github.com/byzantime/jinja-ui-kit"
 
 [dependency-groups]
-dev = ["pytest", "stifle==1.1.0"]
+dev = [
+    "pytest",
+    "ruff==0.16.9",
+    "stifle==1.1.0",
+]
 
 [tool.flit.module]
 name = "jinja_ui_kit"
@@ -37,3 +41,6 @@ exclude = [
 
 [tool.stifle]
 max-doc-lines = 7
+
+[tool.ruff]
+src = ["src", "tests"]
