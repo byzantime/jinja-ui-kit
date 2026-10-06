@@ -13,8 +13,8 @@ LISTEN_ON_BODY = """() => {
   window.bodyClicks = 0;
   window.closesSeen = [];
   document.body.addEventListener('click', () => window.bodyClicks++);
-  document.body.addEventListener('closeModal', (e) => {
-    window.closesSeen.push(e.target.classList.contains('hidden'));
+  document.body.addEventListener('closeModal', () => {
+    window.closesSeen.push(document.getElementById('m').matches('.hidden'));
   });
 }"""
 
@@ -190,3 +190,71 @@ def test_edits_without_guard_never_prompt(open_modal):
 
     assert page.dialogs == []
     assert not is_open(page)
+
+
+def send_from(page, selector, event="closeModal"):
+    page.evaluate(
+        "([selector, event]) => document.querySelector(selector)"
+        ".dispatchEvent(new CustomEvent(event, {bubbles: true}))",
+        [selector, event],
+    )
+
+
+def test_closeModal_from_descendant_closes_before_body_sees_it(open_modal):
+    page = open_modal()
+
+    send_from(page, "#inner")
+
+    assert not is_open(page)
+    assert page.evaluate("window.closesSeen") == [True]
+
+
+def test_closeModal_from_descendant_dirty_guard_dismissed_keeps_open(open_modal):
+    page = open_modal(enableDirtyGuard=True, dirtyMessage="Lose edits?")
+    page.fill("#field", "x")
+
+    send_from(page, "#field")
+
+    assert page.dialogs == ["Lose edits?"]
+    assert is_open(page)
+    assert page.evaluate("window.closesSeen") == []
+
+
+def test_closeModal_outside_any_modal_is_ignored(open_modal):
+    page = open_modal()
+    page.evaluate("document.body.insertAdjacentHTML('beforeend', '<p id=\"out\">')")
+
+    send_from(page, "#out")
+
+    assert is_open(page)
+    assert page.evaluate("window.closesSeen") == [False]
+
+
+NESTED = """
+{% from "jinja_ui_kit/components/modal/macro.html" import modal %}
+{% call modal({"id": "outer", "autoOpen": True}) %}
+  {% call modal({"id": "inner", "autoOpen": True}) %}
+    <button type="button" id="inside-inner">Save</button>
+  {% endcall %}
+{% endcall %}
+"""
+
+
+def test_closeModal_in_nested_modal_closes_only_innermost(render_page):
+    page = render_page(NESTED)
+
+    send_from(page, "#inside-inner")
+
+    hidden = "id => document.getElementById(id).matches('.hidden')"
+    assert page.evaluate(hidden, "inner") is True
+    assert page.evaluate(hidden, "outer") is False
+
+
+def test_closeModal_on_nested_overlay_closes_only_that_overlay(render_page):
+    page = render_page(NESTED)
+
+    send_from(page, "#inner")
+
+    hidden = "id => document.getElementById(id).matches('.hidden')"
+    assert page.evaluate(hidden, "inner") is True
+    assert page.evaluate(hidden, "outer") is False

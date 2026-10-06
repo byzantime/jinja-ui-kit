@@ -99,11 +99,16 @@
   // Capture phase: runs before any listener on the modal or its ancestors
   // (e.g. `on closeModal from body`), so a cancelled close never reaches
   // them, and a close they observe has already happened.
+  //
+  // The event may target the overlay or anything inside it (htmx's
+  // `HX-Trigger: closeModal` fires on the element that made the request,
+  // typically a form in the modal); the innermost enclosing modal closes.
   document.addEventListener(
     "closeModal",
     function (e) {
-      const modal = e.target;
-      if (!isModal(modal) || modal.classList.contains("hidden")) return;
+      const modal =
+        e.target instanceof Element ? e.target.closest(MODAL) : null;
+      if (!modal || modal.classList.contains("hidden")) return;
       if (
         modal.hasAttribute("data-jui-dirty-guard") &&
         dirty.has(modal) &&
