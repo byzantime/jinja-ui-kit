@@ -26,6 +26,12 @@
     return el instanceof Element && el.matches(MODAL);
   }
 
+  // Nearest ancestor-or-self of `el` matching `selector`, or null if `el`
+  // isn't an Element (e.g. a text node, or absent).
+  function closestMatch(el, selector) {
+    return el instanceof Element ? el.closest(selector) : null;
+  }
+
   function sendCloseModal(modal) {
     modal.dispatchEvent(new CustomEvent("closeModal", { bubbles: true }));
   }
@@ -55,7 +61,7 @@
   document.addEventListener(
     "mousedown",
     function (e) {
-      const modal = e.target instanceof Element && e.target.closest(MODAL);
+      const modal = closestMatch(e.target, MODAL);
       if (modal) pressedBackdrop.set(modal, e.target === modal);
     },
     true,
@@ -106,8 +112,7 @@
   document.addEventListener(
     "closeModal",
     function (e) {
-      const modal =
-        e.target instanceof Element ? e.target.closest(MODAL) : null;
+      const modal = closestMatch(e.target, MODAL);
       if (!modal || modal.classList.contains("hidden")) return;
       if (
         modal.hasAttribute("data-jui-dirty-guard") &&
@@ -126,9 +131,7 @@
   );
 
   function onEdit(e) {
-    const modal =
-      e.target instanceof Element &&
-      e.target.closest(MODAL + "[data-jui-dirty-guard]");
+    const modal = closestMatch(e.target, MODAL + "[data-jui-dirty-guard]");
     if (modal && !modal.classList.contains("hidden")) markDirty(modal);
   }
   document.addEventListener("input", onEdit, true);
