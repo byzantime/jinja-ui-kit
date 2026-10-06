@@ -1,7 +1,7 @@
 schema = 1
 
 [setup]
-run = "uv sync && uv run playwright install chromium-headless-shell"
+run = "uv sync && npm ci && uv run playwright install chromium-headless-shell"
 
 [jobs.test]
 run = "uv run pytest -q"
@@ -14,3 +14,9 @@ run = "uv run ruff check src tests"
 
 [jobs.ruff-format]
 run = "uv run ruff format --check src tests"
+
+[jobs.eslint]
+run = "npm run lint"
+
+[jobs.prettier]
+run = "npm run format:check"

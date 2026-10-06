@@ -298,6 +298,11 @@ tailwindcss -i ./src/styles/input.css -o ./src/jinja_ui_kit/dist/jinja-ui-kit.mi
 uv sync
 uv run playwright install chromium-headless-shell
 uv run pytest
+
+# Lint and format-check the JS (ESLint + Prettier, as CI runs them)
+npm ci
+npm run lint
+npm run format:check   # `npm run format` rewrites in place
 ```
 
 `dist/jinja-ui-kit.js` is hand-written and shipped as-is; there is no build step for it.

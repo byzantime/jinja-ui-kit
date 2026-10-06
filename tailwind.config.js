@@ -1,9 +1,7 @@
-const colors = require('tailwindcss/colors')
+const colors = require("tailwindcss/colors");
 
 module.exports = {
-  content: [
-    "./src/jinja_ui_kit/templates/**/*.html",
-  ],
+  content: ["./src/jinja_ui_kit/templates/**/*.html"],
   theme: {
     extend: {
       colors: {
@@ -14,4 +12,4 @@ module.exports = {
       },
     },
   },
-}
+};

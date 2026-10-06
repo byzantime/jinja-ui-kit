@@ -11,16 +11,16 @@
   if (window.__juiKit) return;
   window.__juiKit = true;
 
-  var MODAL = "[data-jui-modal]";
+  const MODAL = "[data-jui-modal]";
 
   // ---------------------------------------------------------------- Modal
 
   // Whether the last mousedown on each modal started on its backdrop.
-  var pressedBackdrop = new WeakMap();
+  const pressedBackdrop = new WeakMap();
   // Dirty-guard state, keyed by overlay.
-  var dirty = new WeakMap();
+  const dirty = new WeakMap();
   // Content panels that already swallow clicks.
-  var swallowing = new WeakSet();
+  const swallowing = new WeakSet();
 
   function isModal(el) {
     return el instanceof Element && el.matches(MODAL);
@@ -38,7 +38,7 @@
     if (dirty.has(modal)) return;
     // Any class change (closing, or reopening) resets the flag, so a
     // reopened modal starts clean.
-    var observer = new MutationObserver(function () {
+    const observer = new MutationObserver(function () {
       clearDirty(modal);
     });
     observer.observe(modal, { attributes: true, attributeFilter: ["class"] });
@@ -46,7 +46,7 @@
   }
 
   function clearDirty(modal) {
-    var observer = dirty.get(modal);
+    const observer = dirty.get(modal);
     if (!observer) return;
     observer.disconnect();
     dirty.delete(modal);
@@ -55,10 +55,10 @@
   document.addEventListener(
     "mousedown",
     function (e) {
-      var modal = e.target instanceof Element && e.target.closest(MODAL);
+      const modal = e.target instanceof Element && e.target.closest(MODAL);
       if (modal) pressedBackdrop.set(modal, e.target === modal);
     },
-    true
+    true,
   );
 
   document.addEventListener(
@@ -73,20 +73,20 @@
         return;
       }
 
-      var closer = e.target.closest("[data-jui-modal-close]");
-      var modal = closer && closer.closest(MODAL);
+      const closer = e.target.closest("[data-jui-modal-close]");
+      const modal = closer && closer.closest(MODAL);
       if (modal) sendCloseModal(modal);
 
       // Bound lazily on the content panel itself (a listener added to a node
       // the event has not reached yet still runs for this event), so clicks
       // reach their targets but stop bubbling past the panel.
-      var content = e.target.closest("[data-jui-modal-content]");
+      const content = e.target.closest("[data-jui-modal-content]");
       if (content && !swallowing.has(content)) {
         swallowing.add(content);
         content.addEventListener("click", swallowClick);
       }
     },
-    true
+    true,
   );
 
   document.addEventListener("keydown", function (e) {
@@ -102,7 +102,7 @@
   document.addEventListener(
     "closeModal",
     function (e) {
-      var modal = e.target;
+      const modal = e.target;
       if (!isModal(modal) || modal.classList.contains("hidden")) return;
       if (
         modal.hasAttribute("data-jui-dirty-guard") &&
@@ -117,11 +117,11 @@
       modal.classList.remove("flex");
       clearDirty(modal);
     },
-    true
+    true,
   );
 
   function onEdit(e) {
-    var modal =
+    const modal =
       e.target instanceof Element &&
       e.target.closest(MODAL + "[data-jui-dirty-guard]");
     if (modal && !modal.classList.contains("hidden")) markDirty(modal);
@@ -134,31 +134,36 @@
     function (e) {
       if (isModal(e.target)) clearDirty(e.target);
     },
-    true
+    true,
   );
 
   // --------------------------------------------------------------- Button
 
-  var GUARDED = "button[data-prevent-double-click], input[data-prevent-double-click]";
+  const GUARDED =
+    "button[data-prevent-double-click], input[data-prevent-double-click]";
 
   // A repeat click while the form is submitting is swallowed entirely.
   document.addEventListener(
     "click",
     function (e) {
-      var button = e.target instanceof Element && e.target.closest(GUARDED);
-      if (button && button.form && button.form.classList.contains("is-submitting")) {
+      const button = e.target instanceof Element && e.target.closest(GUARDED);
+      if (
+        button &&
+        button.form &&
+        button.form.classList.contains("is-submitting")
+      ) {
         e.preventDefault();
         e.stopImmediatePropagation();
       }
     },
-    true
+    true,
   );
 
   document.addEventListener(
     "submit",
     function (e) {
-      var form = e.target;
-      var buttons = Array.prototype.filter.call(form.elements, function (el) {
+      const form = e.target;
+      const buttons = Array.prototype.filter.call(form.elements, function (el) {
         return el.matches(GUARDED);
       });
       if (!buttons.length) return;
@@ -178,10 +183,10 @@
             });
             form.classList.remove("is-submitting");
           },
-          { once: true }
+          { once: true },
         );
       }, 0);
     },
-    true
+    true,
   );
 })();
