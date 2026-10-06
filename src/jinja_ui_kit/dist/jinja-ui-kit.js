@@ -26,6 +26,12 @@
     return el instanceof Element && el.matches(MODAL);
   }
 
+  // Nearest ancestor-or-self of `el` matching `selector`, or null if `el`
+  // isn't an Element (e.g. a text node, or absent).
+  function closestMatch(el, selector) {
+    return el instanceof Element ? el.closest(selector) : null;
+  }
+
   function sendCloseModal(modal) {
     modal.dispatchEvent(new CustomEvent("closeModal", { bubbles: true }));
   }
@@ -55,7 +61,7 @@
   document.addEventListener(
     "mousedown",
     function (e) {
-      const modal = e.target instanceof Element && e.target.closest(MODAL);
+      const modal = closestMatch(e.target, MODAL);
       if (modal) pressedBackdrop.set(modal, e.target === modal);
     },
     true,
@@ -99,11 +105,15 @@
   // Capture phase: runs before any listener on the modal or its ancestors
   // (e.g. `on closeModal from body`), so a cancelled close never reaches
   // them, and a close they observe has already happened.
+  //
+  // The event may target the overlay or anything inside it (htmx's
+  // `HX-Trigger: closeModal` fires on the element that made the request,
+  // typically a form in the modal); the innermost enclosing modal closes.
   document.addEventListener(
     "closeModal",
     function (e) {
-      const modal = e.target;
-      if (!isModal(modal) || modal.classList.contains("hidden")) return;
+      const modal = closestMatch(e.target, MODAL);
+      if (!modal || modal.classList.contains("hidden")) return;
       if (
         modal.hasAttribute("data-jui-dirty-guard") &&
         dirty.has(modal) &&
@@ -121,9 +131,7 @@
   );
 
   function onEdit(e) {
-    const modal =
-      e.target instanceof Element &&
-      e.target.closest(MODAL + "[data-jui-dirty-guard]");
+    const modal = closestMatch(e.target, MODAL + "[data-jui-dirty-guard]");
     if (modal && !modal.classList.contains("hidden")) markDirty(modal);
   }
   document.addEventListener("input", onEdit, true);

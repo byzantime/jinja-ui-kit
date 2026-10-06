@@ -52,7 +52,8 @@
   hyperscript is needed. Its listeners are delegated from `document`, so swapped-in modals just work.
 
   Events: the overlay handles two custom events.
-  - `closeModal` (inbound): runs the built-in close path. With `enableDirtyGuard` on, it is guarded by a
+  - `closeModal` (inbound): runs the built-in close path. It may be dispatched on the overlay or on any
+    element inside it; the innermost enclosing modal closes. With `enableDirtyGuard` on, it is guarded by a
     confirm() prompt if the modal has been marked dirty (any input/change inside it since it was last shown);
     a dismissed prompt cancels the event before it propagates. It is a no-op when the overlay is already
     `.hidden`. All built-in close paths (backdrop click, ✕ button, Escape) send it, bubbling, after the modal
@@ -61,6 +62,8 @@
     <button type="button" data-jui-modal-close>Cancel</button>
     <button _="on click send closeModal to #my-modal">Cancel</button>
     JS: document.querySelector('#my-modal').dispatchEvent(new CustomEvent('closeModal', {bubbles: true}))
+    A form inside the modal can close it on a successful save by having the server answer with an
+    `HX-Trigger: closeModal` response header: htmx fires the event on the form, and it bubbles to the overlay.
   - `markModalClean` (inbound, `enableDirtyGuard` only): clears the dirty flag. Send it after a save that keeps the modal open, so the
     next close does not falsely offer to discard. The flag lives on the overlay, so swapping the body does
     not reset it; any change to the overlay's class (closing, reopening) does.
