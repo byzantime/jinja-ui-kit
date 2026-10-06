@@ -97,6 +97,29 @@ Or with a direct `<link>` tag:
 <link rel="stylesheet" href="{{ url_for('static', filename='css/your-app.css') }}">
 ```
 
+### 3. Include JS
+
+The modal and button macros get their behaviour (closing modals, the dirty guard, `preventDoubleClick`) from a small vanilla JS file shipped with the kit. Its listeners are delegated from `document`, so markup swapped in by htmx needs no extra processing. Add it to every page that renders those macros, either in your asset bundle:
+
+```python
+from jinja_ui_kit.assets import get_js_path
+
+js_bundle = Bundle(get_js_path(), "js/your-app.js", output="js/packed-%(version)s.js")
+```
+
+or as a script tag (it is safe in `<head>` with `defer`):
+
+```html
+<script defer src="{{ url_for('static', filename='js/jinja-ui-kit.js') }}"></script>
+```
+
+### Upgrading to 0.3
+
+- Include the kit's JS (step 3 above). Without it, modals no longer close and `preventDoubleClick` does nothing.
+- The modal and button macros no longer emit hyperscript (`_="…"`), so they no longer need `_hyperscript`. The accordion, radios, checkboxes and table macros still do.
+- The `closeModal` / `markModalClean` events work as before. A Cancel button inside a modal can carry `data-jui-modal-close` instead of `_="on click send closeModal to #id"`.
+- With `preventDoubleClick`, a caller's `attributes._` is no longer merged with a guard script; it is emitted exactly as given.
+
 ## Usage
 
 Import components in your Jinja2 templates:
@@ -270,7 +293,19 @@ Import components in your Jinja2 templates:
 ```bash
 # Rebuild CSS after making changes
 tailwindcss -i ./src/styles/input.css -o ./src/jinja_ui_kit/dist/jinja-ui-kit.min.css --minify
+
+# Run the tests (the browser tests need Chromium's headless shell)
+uv sync
+uv run playwright install chromium-headless-shell
+uv run pytest
+
+# Lint and format-check the JS (ESLint + Prettier, as CI runs them)
+npm ci
+npm run lint
+npm run format:check   # `npm run format` rewrites in place
 ```
+
+`dist/jinja-ui-kit.js` is hand-written and shipped as-is; there is no build step for it.
 
 ## Theming
 

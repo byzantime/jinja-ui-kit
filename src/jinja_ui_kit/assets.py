@@ -16,6 +16,17 @@ def get_css_path() -> str:
     return str(css_file)
 
 
+def get_js_path() -> str:
+    """Get the path to the jinja-ui-kit JS file.
+
+    Returns:
+        str: Absolute path to the jinja-ui-kit.js file (modal and button
+        behaviour; include it on every page that renders those macros)
+    """
+    js_file = files("jinja_ui_kit") / "dist" / "jinja-ui-kit.js"
+    return str(js_file)
+
+
 def get_semantic_css_path() -> str:
     """Get the path to the optional semantic-layer CSS file.
 

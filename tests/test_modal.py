@@ -25,13 +25,13 @@ class ModalMacroTests(unittest.TestCase):
         self.assertIsNotNone(match)
         return match.group(1)
 
-    def _overlay_hyperscript(self, html):
-        match = re.search(r'_="([^"]*)"', html)
-        self.assertIsNotNone(match)
-        return match.group(1)
-
     def _overlay_tag(self, html):
         match = re.search(r'<div\b[^>]*\bid="modal"[^>]*>', html)
+        self.assertIsNotNone(match)
+        return match.group(0)
+
+    def _tag_with(self, html, marker):
+        match = re.search(rf"<\w+\b[^>]*\b{marker}\b[^>]*>", html)
         self.assertIsNotNone(match)
         return match.group(0)
 
@@ -57,77 +57,52 @@ class ModalMacroTests(unittest.TestCase):
         self.assertNotIn("; height:", style)
         self.assertNotRegex(style, r"^height:")
 
-    def test_overlay_only_closes_on_click_that_started_on_backdrop(self):
-        for params in ({}, {"enableDirtyGuard": True}):
+    def test_renders_no_hyperscript(self):
+        every_flag = {
+            "title": "T",
+            "subtitle": "S",
+            "icon": "<i></i>",
+            "autoOpen": True,
+            "showCloseButton": True,
+            "enableKeyboardClose": True,
+            "enableDirtyGuard": True,
+            "footerHtml": "<p>f</p>",
+        }
+        for params in ({}, every_flag):
             with self.subTest(params=params):
-                overlay_hs = self._overlay_hyperscript(self._render(params))
+                self.assertNotIn('_="', self._render(params))
 
-                self.assertIn(
-                    "set :pressedBackdrop to (event.target is me)", overlay_hs
-                )
-                self.assertIn(
-                    "if :pressedBackdrop send closeModal to me end", overlay_hs
-                )
-
-    def _assert_closes_without_guard(self, html):
-        overlay_hs = self._overlay_hyperscript(html)
-        overlay_tag = self._overlay_tag(html)
-
-        self.assertNotIn(":dirty", overlay_hs)
-        self.assertNotIn("confirm", overlay_hs)
-        self.assertNotIn("markModalClean", overlay_hs)
-        self.assertNotIn("data-dirty-message", overlay_tag)
-
-        self.assertIn('_="on click send closeModal to #modal"', html)
-        self.assertIn("if :pressedBackdrop send closeModal to me end", overlay_hs)
-        self.assertIn(
-            "keydown[key=='Escape'] from document send closeModal to me", overlay_hs
-        )
-        close_hs = overlay_hs[overlay_hs.index("on closeModal") :]
-        self.assertIn("if I match .hidden exit end", close_hs)
-        self.assertIn("add .hidden to me", close_hs)
-        self.assertIn("remove .flex from me", close_hs)
-
-    def test_dirty_guard_is_off_by_default(self):
-        self._assert_closes_without_guard(self._render({}))
-
-    def test_dirty_guard_disabled_ignores_dirty_message(self):
-        self._assert_closes_without_guard(
-            self._render({"enableDirtyGuard": False, "dirtyMessage": "x"})
-        )
-
-    def test_overlay_closeModal_handler_guards_on_dirty_with_confirm(self):
-        html = self._render({"enableDirtyGuard": True})
-        overlay_hs = self._overlay_hyperscript(html)
-
-        self.assertIn("on closeModal", overlay_hs)
-        self.assertIn("if :dirty", overlay_hs)
-        self.assertIn("confirm(@data-dirty-message)", overlay_hs)
-
-        close_index = overlay_hs.index("on closeModal")
-        guard_index = overlay_hs.index("if I match .hidden exit end")
-        dirty_index = overlay_hs.index("if :dirty")
-        self.assertLess(close_index, guard_index)
-        self.assertLess(guard_index, dirty_index)
-
-    def test_header_close_button_sends_closeModal(self):
+    def test_kit_js_hooks_are_on_the_right_elements(self):
         html = self._render({"id": "modal"})
 
-        self.assertIn('_="on click send closeModal to #modal"', html)
-
-    def test_enable_keyboard_close_false_omits_escape_handler(self):
-        html = self._render({"enableKeyboardClose": False})
-        overlay_hs = self._overlay_hyperscript(html)
-
-        self.assertNotIn("keydown[key=='Escape']", overlay_hs)
-
-    def test_enable_keyboard_close_default_includes_escape_handler(self):
-        html = self._render({})
-        overlay_hs = self._overlay_hyperscript(html)
-
+        self.assertIn("data-jui-modal", self._overlay_tag(html))
         self.assertIn(
-            "keydown[key=='Escape'] from document send closeModal to me", overlay_hs
+            'id="modal-content"', self._tag_with(html, "data-jui-modal-content")
         )
+        self.assertTrue(
+            self._tag_with(html, "data-jui-modal-close").startswith("<button")
+        )
+
+    def test_close_button_omitted_when_disabled(self):
+        html = self._render({"showCloseButton": False})
+
+        self.assertNotIn("data-jui-modal-close", html)
+
+    def test_keyboard_close_is_on_by_default(self):
+        self.assertIn("data-jui-keyboard-close", self._overlay_tag(self._render({})))
+
+    def test_enable_keyboard_close_false_omits_marker(self):
+        html = self._render({"enableKeyboardClose": False})
+
+        self.assertNotIn("data-jui-keyboard-close", self._overlay_tag(html))
+
+    def test_dirty_guard_is_off_by_default(self):
+        for params in ({}, {"enableDirtyGuard": False, "dirtyMessage": "x"}):
+            with self.subTest(params=params):
+                overlay_tag = self._overlay_tag(self._render(params))
+
+                self.assertNotIn("data-jui-dirty-guard", overlay_tag)
+                self.assertNotIn("data-dirty-message", overlay_tag)
 
     def test_custom_dirty_message_is_rendered(self):
         html = self._render(
@@ -135,6 +110,7 @@ class ModalMacroTests(unittest.TestCase):
         )
         overlay_tag = self._overlay_tag(html)
 
+        self.assertIn("data-jui-dirty-guard", overlay_tag)
         self.assertIn('data-dirty-message="Lose your edits?"', overlay_tag)
         self.assertNotIn("Discard unsaved changes?", overlay_tag)
 
@@ -144,35 +120,15 @@ class ModalMacroTests(unittest.TestCase):
 
         self.assertIn('data-dirty-message="Discard unsaved changes?"', overlay_tag)
 
-    def test_dirty_message_cannot_inject_hyperscript(self):
-        payload = (
-            "ok') then fetch('/evil') then confirm('x\" _=\"on click fetch('/evil2')"
-        )
+    def test_dirty_message_is_escaped(self):
+        payload = "ok\" _=\"on click fetch('/evil')"
         html = self._render({"enableDirtyGuard": True, "dirtyMessage": payload})
-        overlay_hs = self._overlay_hyperscript(html)
         overlay_tag = self._overlay_tag(html)
 
-        self.assertNotIn("fetch(", overlay_hs)
-        self.assertEqual(overlay_tag.count('_="'), 1)
+        self.assertNotIn('_="', overlay_tag)
         match = re.search(r'data-dirty-message="([^"]*)"', overlay_tag)
         self.assertIsNotNone(match)
-        value = match.group(1)
-        self.assertIn("&#34;", value)
-        self.assertNotIn('"', value)
-        self.assertNotIn("'", value)
-
-    def test_overlay_clears_dirty_on_markModalClean(self):
-        html = self._render({"enableDirtyGuard": True})
-        overlay_hs = self._overlay_hyperscript(html)
-
-        self.assertIn("on markModalClean set :dirty to false", overlay_hs)
-
-    def test_class_mutation_always_clears_dirty(self):
-        html = self._render({"enableDirtyGuard": True})
-        overlay_hs = self._overlay_hyperscript(html)
-
-        self.assertIn("on mutation of @class set :dirty to false", overlay_hs)
-        self.assertNotIn("on mutation of @class if", overlay_hs)
+        self.assertIn("&#34;", match.group(1))
 
 
 if __name__ == "__main__":
