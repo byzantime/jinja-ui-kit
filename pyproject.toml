@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "jinja-ui-kit"
-version = "0.2.0"
+version = "0.3.0"
 description = "A collection of reusable Jinja2 macros for building web application UIs with Tailwind CSS styling"
 dependencies = [
     "Jinja2>=3.0"
@@ -16,6 +16,7 @@ Homepage = "https://github.com/byzantime/jinja-ui-kit"
 
 [dependency-groups]
 dev = [
+    "playwright==1.62.0",
     "pytest",
     "ruff==0.16.9",
     "stifle==1.1.0",
@@ -26,6 +27,7 @@ name = "jinja_ui_kit"
 
 [tool.flit.sdist]
 include = [
+    "src/jinja_ui_kit/dist/jinja-ui-kit.js",
     "src/jinja_ui_kit/dist/jinja-ui-kit.min.css",
     "src/jinja_ui_kit/styles/semantic.css",
     "src/jinja_ui_kit/templates/**/*.html",

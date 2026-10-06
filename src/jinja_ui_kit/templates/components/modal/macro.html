@@ -3,7 +3,7 @@
 
   @param {object} params - Configuration object for the modal
   @param {string} [params.id='modal'] - ID for the overlay element. Content panel gets id="{id}-content",
-      title heading gets id="{id}-title" (always rendered for hyperscript targeting).
+      title heading gets id="{id}-title" (always rendered, for scripted title updates).
   @param {string} [params.title] - Header title text
   @param {string} [params.titleHtml] - Header title HTML (takes precedence over title)
   @param {string} [params.subtitle] - Header subtitle text
@@ -19,8 +19,8 @@
       straight away. `dirtyMessage` and `markModalClean` only apply when this is on.
   @param {string} [params.dirtyMessage='Discard unsaved changes?'] - Confirmation prompt shown when closing a
       modal that has unsaved input/change activity in it (only with `enableDirtyGuard`). Rendered as the
-      overlay's `data-dirty-message` attribute and read by hyperscript at confirm time, so the message never
-      enters hyperscript source and any text is safe, including user-derived values.
+      overlay's `data-dirty-message` attribute and read at confirm time, so any text is safe, including
+      user-derived values.
   @param {string} [params.customClasses] - Extra CSS classes on the content panel
   @param {string} [params.headerClasses] - Extra CSS classes on the header div
   @param {string} [params.bodyClasses] - Extra CSS classes on the scrollable body div
@@ -48,15 +48,22 @@
   Modal opened via hyperscript:
   <button _="on click remove .hidden from #confirm-modal add .flex to #confirm-modal">Open</button>
 
-  Events: the overlay listens for two custom events.
+  Behaviour comes from the kit's JS (`get_js_path()`, see README), which must be on the page; no
+  hyperscript is needed. Its listeners are delegated from `document`, so swapped-in modals just work.
+
+  Events: the overlay handles two custom events.
   - `closeModal` (inbound): runs the built-in close path. With `enableDirtyGuard` on, it is guarded by a
-    confirm() prompt if the modal has been marked dirty (any input/change inside it since it was last shown).
-    It is a no-op when the overlay is already `.hidden`. All built-in close paths (backdrop click, ✕ button,
-    Escape) send it, and consumer Cancel buttons should send it to get the same behaviour:
+    confirm() prompt if the modal has been marked dirty (any input/change inside it since it was last shown);
+    a dismissed prompt cancels the event before it propagates. It is a no-op when the overlay is already
+    `.hidden`. All built-in close paths (backdrop click, ✕ button, Escape) send it, bubbling, after the modal
+    is hidden, so `on closeModal from body` style listeners see every close. Consumer Cancel buttons get the
+    same behaviour by carrying `data-jui-modal-close` inside the modal, or by sending the event:
+    <button type="button" data-jui-modal-close>Cancel</button>
     <button _="on click send closeModal to #my-modal">Cancel</button>
+    JS: document.querySelector('#my-modal').dispatchEvent(new CustomEvent('closeModal', {bubbles: true}))
   - `markModalClean` (inbound, `enableDirtyGuard` only): clears the dirty flag. Send it after a save that keeps the modal open, so the
-    next close does not falsely offer to discard. `:dirty` lives on the overlay, so swapping the body does
-    not reset it.
+    next close does not falsely offer to discard. The flag lives on the overlay, so swapping the body does
+    not reset it; any change to the overlay's class (closing, reopening) does.
     hyperscript: send markModalClean to #my-modal
     JS:          document.querySelector('#my-modal').dispatchEvent(new CustomEvent('markModalClean'))
     htmx:        hx-on::after-request="if(event.detail.successful) htmx.trigger('#my-modal','markModalClean')"
@@ -104,21 +111,9 @@
 <div
   id="{{ id }}"
   class="fixed inset-0 z-50 items-center justify-center {{ 'flex' if autoOpen else 'hidden' }} bg-black bg-opacity-50"
-  _="on mousedown set :pressedBackdrop to (event.target is me)
-     on click if :pressedBackdrop send closeModal to me end
-     {% if enableDirtyGuard %}on input or change if I do not match .hidden set :dirty to true end
-     on mutation of @class set :dirty to false end
-     on markModalClean set :dirty to false end{% endif %}
-     {% if enableKeyboardClose %}on keydown[key=='Escape'] from document send closeModal to me{% endif %}
-     on closeModal
-       if I match .hidden exit end
-       {% if enableDirtyGuard %}if :dirty
-         if not confirm(@data-dirty-message) halt end
-       end
-       {% endif %}add .hidden to me
-       remove .flex from me{% if enableDirtyGuard %}
-       set :dirty to false{% endif %}"
-  {% if enableDirtyGuard %}data-dirty-message="{{ dirtyMessage }}"{% endif %}
+  data-jui-modal
+  {%- if enableKeyboardClose %} data-jui-keyboard-close{% endif %}
+  {%- if enableDirtyGuard %} data-jui-dirty-guard data-dirty-message="{{ dirtyMessage }}"{% endif %}
   {{- attributes(params.attributes) -}}>
 
   <!-- Modal Content -->
@@ -126,7 +121,7 @@
     id="{{ id }}-content"
     class="relative z-50 flex flex-col w-full {{ sizeClass }} mx-4 bg-white rounded-2xl shadow-2xl{{ ' ' ~ customClasses if customClasses }}"
     style="max-height: {{ maxHeight }}{% if size == 'fullscreen' %}; height: 98vh{% endif %}"
-    _="on click halt bubbling">
+    data-jui-modal-content>
 
     {% if hasHeader %}
     <!-- Modal Header -->
@@ -154,7 +149,7 @@
         <button
           type="button"
           class="text-neutral-400 transition-colors hover:text-neutral-600"
-          _="on click send closeModal to #{{ id }}">
+          data-jui-modal-close>
           <i class="text-xl fa-solid fa-times"></i>
         </button>
         {% endif %}

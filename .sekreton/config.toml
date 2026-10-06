@@ -1,7 +1,7 @@
 schema = 1
 
 [setup]
-run = "uv sync"
+run = "uv sync && uv run playwright install chromium-headless-shell"
 
 [jobs.test]
 run = "uv run pytest -q"

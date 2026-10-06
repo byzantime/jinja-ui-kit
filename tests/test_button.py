@@ -26,11 +26,6 @@ class ButtonMacroTests(unittest.TestCase):
         self.assertIsNotNone(match)
         return match.group(1)
 
-    def _hyperscript(self, html):
-        match = re.search(r'_="([^"]*)"', html)
-        self.assertIsNotNone(match)
-        return match.group(1)
-
     def test_link_button_does_not_wrap(self):
         html = self._render({"text": "Save and continue", "href": "/next"})
 
@@ -51,31 +46,24 @@ class ButtonMacroTests(unittest.TestCase):
 
         self.assertIn("whitespace-nowrap", self._classes(html, "a"))
 
-    def test_prevent_double_click_adds_hyperscript_guard(self):
-        html = self._render({"text": "Save and continue", "preventDoubleClick": True})
+    def test_prevent_double_click_marks_control_without_hyperscript(self):
+        for params in (
+            {"text": "Save"},
+            {"name": "action", "value": "Save"},
+            {"text": "Save", "href": "/next"},
+        ):
+            with self.subTest(params=params):
+                html = self._render(dict(params, preventDoubleClick=True))
 
-        script = self._hyperscript(html)
-        self.assertIn("is-submitting", script)
-        self.assertIn("htmx:after:request", script)
-        self.assertIn('data-prevent-double-click="true"', html)
+                self.assertIn('data-prevent-double-click="true"', html)
+                self.assertNotIn('_="', html)
 
-    def test_prevent_double_click_adds_hyperscript_guard_on_input(self):
-        html = self._render(
-            {"name": "action", "value": "Save and continue", "preventDoubleClick": True}
-        )
-
-        script = self._hyperscript(html)
-        self.assertIn("is-submitting", script)
-        self.assertIn("htmx:after:request", script)
-        self.assertIn('data-prevent-double-click="true"', html)
-
-    def test_no_hyperscript_guard_by_default(self):
+    def test_no_guard_by_default(self):
         html = self._render({"text": "Save and continue"})
 
-        self.assertNotIn('_="', html)
         self.assertNotIn("data-prevent-double-click", html)
 
-    def test_prevent_double_click_merges_caller_hyperscript(self):
+    def test_prevent_double_click_passes_caller_hyperscript_through(self):
         html = self._render(
             {
                 "text": "Save and continue",
@@ -84,33 +72,10 @@ class ButtonMacroTests(unittest.TestCase):
             }
         )
 
-        script = self._hyperscript(html)
-        self.assertTrue(script.startswith("on click log 1"))
-        self.assertIn("is-submitting", script)
-        self.assertIn("htmx:after:request", script)
-
-    def test_prevent_double_click_ignored_for_link_buttons(self):
-        html = self._render(
-            {"text": "Save and continue", "href": "/next", "preventDoubleClick": True}
-        )
-
-        self.assertNotIn('_="', html)
+        self.assertIn('_="on click log 1"', html)
         self.assertIn('data-prevent-double-click="true"', html)
 
-    def test_prevent_double_click_preserves_other_caller_attributes(self):
-        html = self._render(
-            {
-                "text": "Save and continue",
-                "preventDoubleClick": True,
-                "attributes": {"data-testid": "save-button"},
-            }
-        )
-
-        script = self._hyperscript(html)
-        self.assertIn("is-submitting", script)
-        self.assertIn('data-testid="save-button"', html)
-
-    def test_prevent_double_click_skipped_for_prerendered_string_attributes(self):
+    def test_prevent_double_click_keeps_prerendered_string_attributes(self):
         html = self._render(
             {
                 "text": "Save and continue",
@@ -119,7 +84,6 @@ class ButtonMacroTests(unittest.TestCase):
             }
         )
 
-        self.assertNotIn('_="', html)
         self.assertIn('data-testid="save-button"', html)
         self.assertIn('data-prevent-double-click="true"', html)
 
