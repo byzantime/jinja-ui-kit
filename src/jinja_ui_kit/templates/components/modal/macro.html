@@ -17,10 +17,12 @@
   @param {boolean} [params.showCloseButton=true] - Render a close (✕) button in the header
   @param {boolean} [params.enableKeyboardClose=true] - Close on Escape key
   @param {boolean} [params.enableDirtyGuard=false] - Ask "Discard unsaved changes?" (via confirm()) before
-      closing a modal that has had input/change activity in it. Off by default: every close path closes
-      straight away. `dirtyMessage` and `markModalClean` only apply when this is on.
+      closing a modal that is dirty: a control in it was edited and its value now differs from when it was
+      first focused since the modal opened or was last marked clean (reverting an edit counts as clean).
+      Off by default: every close path closes straight away. `dirtyMessage` and `markModalClean` only apply
+      when this is on. See "Dirty guard" below for which controls count.
   @param {string} [params.dirtyMessage='Discard unsaved changes?'] - Confirmation prompt shown when closing a
-      modal that has unsaved input/change activity in it (only with `enableDirtyGuard`). Rendered as the
+      dirty modal (only with `enableDirtyGuard`). Rendered as the
       overlay's `data-dirty-message` attribute and read at confirm time, so any text is safe, including
       user-derived values.
   @param {string} [params.customClasses] - Extra CSS classes on the content panel
@@ -56,7 +58,7 @@
   Events: the overlay handles two custom events.
   - `closeModal` (inbound): runs the built-in close path. It may be dispatched on the overlay or on any
     element inside it; the innermost enclosing modal closes. With `enableDirtyGuard` on, it is guarded by a
-    confirm() prompt if the modal has been marked dirty (any input/change inside it since it was last shown);
+    confirm() prompt if the modal is dirty (see "Dirty guard" below);
     a dismissed prompt cancels the event before it propagates. It is a no-op when the overlay is already
     `.hidden`. All built-in close paths (backdrop click, ✕ button, Escape) send it, bubbling, after the modal
     is hidden, so `on closeModal from body` style listeners see every close. Consumer Cancel buttons get the
@@ -66,12 +68,23 @@
     JS: document.querySelector('#my-modal').dispatchEvent(new CustomEvent('closeModal', {bubbles: true}))
     A form inside the modal can close it on a successful save by having the server answer with an
     `HX-Trigger: closeModal` response header: htmx fires the event on the form, and it bubbles to the overlay.
-  - `markModalClean` (inbound, `enableDirtyGuard` only): clears the dirty flag. Send it after a save that keeps the modal open, so the
-    next close does not falsely offer to discard. The flag lives on the overlay, so swapping the body does
-    not reset it; any change to the overlay's class (closing, reopening) does.
+  - `markModalClean` (inbound, `enableDirtyGuard` only): clears the dirty state, taking the current values as
+    the new baseline. Send it after a save that keeps the modal open, so the next close does not falsely offer
+    to discard. The state lives on the overlay, so swapping the body does not reset it (an edited control
+    swapped out counts as dirty); any change to the overlay's class (closing, reopening) does.
     hyperscript: send markModalClean to #my-modal
     JS:          document.querySelector('#my-modal').dispatchEvent(new CustomEvent('markModalClean'))
     htmx:        hx-on::after-request="if(event.detail.successful) htmx.trigger('#my-modal','markModalClean')"
+  Dirty guard: edits are tracked through `input`/`change` events reaching `document` (bubble phase) from inside
+  the modal. These are ignored:
+  - search inputs (`<input type="search">`);
+  - controls carrying `data-jui-dirty-ignore`, or inside an element in the modal that carries it;
+  - controls whose `input`/`change` doesn't bubble to `document` (e.g. a listener stops its propagation, such
+    as hyperscript's `on input or change halt bubbling`).
+  Use the attribute for controls that save themselves, so their edits never count as unsaved:
+    <input name="nickname" data-jui-dirty-ignore hx-post="/profile/nickname" hx-trigger="change">
+  Controls without a comparable value (`contenteditable`, file inputs, custom elements) count as dirty once
+  edited, as does a control whose value a script changed and announced without it being focused first.
   Closing by toggling `.hidden`/`.flex` directly (as the "Modal opened via hyperscript" example above does
   for opening) bypasses the dirty-check guard — fine for post-submit closes, not for a Cancel button on a
   dirty form.
