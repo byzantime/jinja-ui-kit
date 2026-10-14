@@ -24,20 +24,24 @@ def open_modal(render_page):
     def open_modal(**params):
         page = render_page(TEMPLATE, params={"id": "m", "autoOpen": True, **params})
         page.evaluate(LISTEN_ON_BODY)
-        page.dialogs = []
-
-        def on_dialog(dialog):
-            page.dialogs.append(dialog.message)
-            if page.accept_dialogs:
-                dialog.accept()
-            else:
-                dialog.dismiss()
-
-        page.accept_dialogs = False
-        page.on("dialog", on_dialog)
+        record_dialogs(page)
         return page
 
     return open_modal
+
+
+def record_dialogs(page):
+    page.dialogs = []
+
+    def on_dialog(dialog):
+        page.dialogs.append(dialog.message)
+        if page.accept_dialogs:
+            dialog.accept()
+        else:
+            dialog.dismiss()
+
+    page.accept_dialogs = False
+    page.on("dialog", on_dialog)
 
 
 def is_open(page):
@@ -250,3 +254,158 @@ def test_closeModal_on_nested_overlay_closes_only_that_overlay(render_page):
     hidden = "id => document.getElementById(id).matches('.hidden')"
     assert page.evaluate(hidden, "inner") is True
     assert page.evaluate(hidden, "outer") is False
+
+
+FORM = """
+{% from "jinja_ui_kit/components/modal/macro.html" import modal %}
+{% if wrap %}<div data-jui-dirty-ignore>{% endif %}
+{% call modal({"id": "m", "autoOpen": True, "enableDirtyGuard": True}) %}
+  <input id="text" value="t">
+  <textarea id="area">a</textarea>
+  <select id="sel"><option value="a">A</option><option value="b">B</option></select>
+  <input type="checkbox" id="check">
+  <input type="radio" name="r" id="ra" value="a" checked>
+  <input type="radio" name="r" id="rb" value="b">
+  <input type="search" id="search">
+  <input id="halted">
+  <input id="ignored" data-jui-dirty-ignore>
+  <div data-jui-dirty-ignore><input id="wrapped"></div>
+  <div id="editable" contenteditable>e</div>
+{% endcall %}
+{% if wrap %}</div>{% endif %}
+"""
+
+HALT = """() => {
+  const halted = document.getElementById('halted');
+  for (const type of ['input', 'change']) {
+    halted.addEventListener(type, e => e.stopPropagation());
+  }
+}"""
+
+
+@pytest.fixture
+def form_modal(render_page):
+    def form_modal(wrap=False):
+        page = render_page(FORM, wrap=wrap)
+        page.evaluate(HALT)
+        record_dialogs(page)
+        return page
+
+    return form_modal
+
+
+def prompts_on_close(page):
+    send(page, "closeModal")
+    return page.dialogs == ["Discard unsaved changes?"]
+
+
+@pytest.mark.parametrize("selector", ["#halted", "#ignored", "#wrapped", "#search"])
+def test_dirty_guard_ignores_exempt_controls(form_modal, selector):
+    page = form_modal()
+
+    page.fill(selector, "x")
+
+    assert not prompts_on_close(page)
+    assert not is_open(page)
+
+
+EDITS = {
+    "text": lambda page: page.fill("#text", "x"),
+    "textarea": lambda page: page.fill("#area", "x"),
+    "select": lambda page: (page.focus("#sel"), page.select_option("#sel", "b")),
+    "checkbox": lambda page: page.check("#check"),
+    "radio": lambda page: page.check("#rb"),
+    "contenteditable": lambda page: page.fill("#editable", "x"),
+}
+
+
+@pytest.mark.parametrize("edit", EDITS.values(), ids=EDITS.keys())
+def test_dirty_guard_prompts_after_real_edit(form_modal, edit):
+    page = form_modal()
+
+    edit(page)
+
+    assert prompts_on_close(page)
+    assert is_open(page)
+
+
+REVERTS = {
+    "text": lambda page: (page.fill("#text", "x"), page.fill("#text", "t")),
+    "textarea": lambda page: (page.fill("#area", "x"), page.fill("#area", "a")),
+    "select": lambda page: (
+        page.focus("#sel"),
+        page.select_option("#sel", "b"),
+        page.select_option("#sel", "a"),
+    ),
+    "checkbox": lambda page: (page.click("#check"), page.click("#check")),
+    "radio": lambda page: (page.check("#rb"), page.check("#ra")),
+}
+
+
+@pytest.mark.parametrize("revert", REVERTS.values(), ids=REVERTS.keys())
+def test_dirty_guard_ignores_reverted_edit(form_modal, revert):
+    page = form_modal()
+
+    revert(page)
+
+    assert not prompts_on_close(page)
+    assert not is_open(page)
+
+
+def test_dirty_ignore_outside_modal_does_not_exempt_it(form_modal):
+    page = form_modal(wrap=True)
+
+    page.fill("#text", "x")
+
+    assert prompts_on_close(page)
+
+
+def test_markModalClean_rebaselines_focused_control(form_modal):
+    page = form_modal()
+    page.fill("#text", "x")
+    send(page, "markModalClean", bubbles=False)
+
+    page.fill("#text", "y")
+    page.fill("#text", "x")
+
+    assert not prompts_on_close(page)
+
+
+def test_edit_after_markModalClean_prompts(form_modal):
+    page = form_modal()
+    page.fill("#text", "x")
+    send(page, "markModalClean", bubbles=False)
+
+    page.fill("#text", "y")
+
+    assert prompts_on_close(page)
+
+
+def test_non_bubbling_input_event_does_not_mark_dirty(form_modal):
+    page = form_modal()
+
+    send(page, "input", bubbles=False, selector="#text")
+
+    assert not prompts_on_close(page)
+
+
+TWO_FORMS = """
+{% from "jinja_ui_kit/components/modal/macro.html" import modal %}
+{% call modal({"id": "m", "autoOpen": True, "enableDirtyGuard": True}) %}
+  <form><input type="radio" name="r" id="a1" value="a" checked>
+    <input type="radio" name="r" id="b1" value="b"></form>
+  <form><input type="radio" name="r" id="a2" value="a">
+    <input type="radio" name="r" id="b2" value="b" checked></form>
+{% endcall %}
+"""
+
+
+def test_same_named_radio_groups_in_different_forms_keep_own_baselines(render_page):
+    page = render_page(TWO_FORMS)
+    record_dialogs(page)
+
+    page.check("#b1")
+    page.check("#a1")
+    page.check("#a2")
+
+    assert prompts_on_close(page)

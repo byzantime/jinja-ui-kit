@@ -17,8 +17,10 @@
 
   // Whether the last mousedown on each modal started on its backdrop.
   const pressedBackdrop = new WeakMap();
-  // Dirty-guard state, keyed by overlay.
-  const dirty = new WeakMap();
+  // Dirty-guard state, keyed by overlay: `baseline` maps each control's key
+  // to its value when first seen, `edited` holds controls that have fired
+  // input/change since, and `observer` resets it all on a class change.
+  const guard = new WeakMap();
   // Content panels that already swallow clicks.
   const swallowing = new WeakSet();
 
@@ -40,22 +42,115 @@
     e.stopPropagation();
   }
 
-  function markDirty(modal) {
-    if (dirty.has(modal)) return;
-    // Any class change (closing, or reopening) resets the flag, so a
+  function guardState(modal) {
+    let state = guard.get(modal);
+    if (state) return state;
+    // Any class change (closing, or reopening) resets the state, so a
     // reopened modal starts clean.
     const observer = new MutationObserver(function () {
       clearDirty(modal);
     });
     observer.observe(modal, { attributes: true, attributeFilter: ["class"] });
-    dirty.set(modal, observer);
+    state = { baseline: new Map(), edited: new Set(), observer };
+    guard.set(modal, state);
+    return state;
   }
 
   function clearDirty(modal) {
-    const observer = dirty.get(modal);
-    if (!observer) return;
-    observer.disconnect();
-    dirty.delete(modal);
+    const state = guard.get(modal);
+    if (!state) return;
+    state.observer.disconnect();
+    guard.delete(modal);
+  }
+
+  // The open, guarded modal whose edits `el` counts towards, or null if
+  // `el` is a search box or sits under a `[data-jui-dirty-ignore]` in it.
+  function trackingModal(el) {
+    const modal = closestMatch(el, MODAL + "[data-jui-dirty-guard]");
+    if (!modal || modal.classList.contains("hidden")) return null;
+    if (el instanceof HTMLInputElement && el.type === "search") return null;
+    const ignored = el.closest("[data-jui-dirty-ignore]");
+    return ignored && modal.contains(ignored) ? null : modal;
+  }
+
+  // Whether `el` has a value `readValue` can compare.
+  function isComparable(el) {
+    return (
+      (el instanceof HTMLInputElement && el.type !== "file") ||
+      el instanceof HTMLSelectElement ||
+      el instanceof HTMLTextAreaElement
+    );
+  }
+
+  function isNamedRadio(el) {
+    return (
+      el instanceof HTMLInputElement && el.type === "radio" && Boolean(el.name)
+    );
+  }
+
+  // The radios in `el`'s group: same name and form. A form's `elements`
+  // also covers radios tied to it by a `form` attribute.
+  function radioGroup(el, modal) {
+    const scope = el.form ? el.form.elements : modal.querySelectorAll("input");
+    return Array.prototype.filter.call(scope, function (r) {
+      return (
+        r instanceof HTMLInputElement &&
+        r.type === "radio" &&
+        r.name === el.name &&
+        r.form === el.form
+      );
+    });
+  }
+
+  // A radio group shares one baseline, keyed by its first radio, so
+  // A -> B -> A reads as unchanged.
+  function baselineKey(el, modal) {
+    return isNamedRadio(el) ? radioGroup(el, modal)[0] || el : el;
+  }
+
+  function readValue(el, modal) {
+    if (el.type === "checkbox") return el.checked;
+    if (el.type === "radio") {
+      if (!isNamedRadio(el)) return el.checked ? el.value : null;
+      const checked = radioGroup(el, modal).find(function (r) {
+        return r.checked;
+      });
+      return checked ? checked.value : null;
+    }
+    if (el instanceof HTMLSelectElement && el.multiple) {
+      return JSON.stringify(
+        Array.prototype.map.call(el.selectedOptions, function (o) {
+          return o.value;
+        }),
+      );
+    }
+    return el.value;
+  }
+
+  // Snapshot a control's value the first time it is focused or pressed
+  // after the modal opens (or is marked clean), before the user edits it.
+  function recordBaseline(el) {
+    if (!isComparable(el)) return;
+    const modal = trackingModal(el);
+    if (!modal) return;
+    const baseline = guardState(modal).baseline;
+    const key = baselineKey(el, modal);
+    if (!baseline.has(key)) baseline.set(key, readValue(el, modal));
+  }
+
+  // An edit counts unless its control is back at its baseline. Controls
+  // with no comparable value, no baseline (an event dispatched by script
+  // without a prior focus), or swapped out since the edit are assumed dirty.
+  function isDirty(modal) {
+    const state = guard.get(modal);
+    if (!state) return false;
+    for (const el of state.edited) {
+      if (!el.isConnected || !isComparable(el)) return true;
+      const key = baselineKey(el, modal);
+      if (!state.baseline.has(key)) return true;
+      if (readValue(el, modal) !== state.baseline.get(key)) return true;
+    }
+    return false;
   }
 
   document.addEventListener(
@@ -116,7 +211,7 @@
       if (!modal || modal.classList.contains("hidden")) return;
       if (
         modal.hasAttribute("data-jui-dirty-guard") &&
-        dirty.has(modal) &&
+        isDirty(modal) &&
         !window.confirm(modal.dataset.dirtyMessage)
       ) {
         e.preventDefault();
@@ -130,17 +225,36 @@
     true,
   );
 
-  function onEdit(e) {
-    const modal = closestMatch(e.target, MODAL + "[data-jui-dirty-guard]");
-    if (modal && !modal.classList.contains("hidden")) markDirty(modal);
+  // Capture phase, so the snapshot precedes any edit. `pointerdown` covers
+  // browsers (Safari) that don't focus checkboxes and radios on click; a
+  // press on a label snapshots the control it toggles.
+  function onApproach(e) {
+    if (!(e.target instanceof Element)) return;
+    recordBaseline(e.target);
+    const label = e.target.closest("label");
+    if (label && label.control) recordBaseline(label.control);
   }
-  document.addEventListener("input", onEdit, true);
-  document.addEventListener("change", onEdit, true);
+  document.addEventListener("focusin", onApproach, true);
+  document.addEventListener("pointerdown", onApproach, true);
 
+  // Bubble phase, so a control that stops its input/change from
+  // propagating (e.g. an auto-saving one) never marks the modal dirty.
+  function onEdit(e) {
+    const modal = trackingModal(e.target);
+    if (modal) guardState(modal).edited.add(e.target);
+  }
+  document.addEventListener("input", onEdit);
+  document.addEventListener("change", onEdit);
+
+  // Re-snapshot the focused control at once: it won't fire `focusin`
+  // again before the user's next edit.
   document.addEventListener(
     "markModalClean",
     function (e) {
-      if (isModal(e.target)) clearDirty(e.target);
+      if (!isModal(e.target)) return;
+      clearDirty(e.target);
+      const active = document.activeElement;
+      if (active && e.target.contains(active)) recordBaseline(active);
     },
     true,
   );
