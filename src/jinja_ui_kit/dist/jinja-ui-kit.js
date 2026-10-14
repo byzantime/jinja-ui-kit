@@ -88,22 +88,33 @@
     );
   }
 
-  // A radio group shares one baseline, so A -> B -> A reads as unchanged.
-  function baselineKey(el) {
-    return isNamedRadio(el) ? "radio:" + el.name : el;
+  // The radios in `el`'s group: same name and form. A form's `elements`
+  // also covers radios tied to it by a `form` attribute.
+  function radioGroup(el, modal) {
+    const scope = el.form ? el.form.elements : modal.querySelectorAll("input");
+    return Array.prototype.filter.call(scope, function (r) {
+      return (
+        r instanceof HTMLInputElement &&
+        r.type === "radio" &&
+        r.name === el.name &&
+        r.form === el.form
+      );
+    });
+  }
+
+  // A radio group shares one baseline, keyed by its first radio, so
+  // A -> B -> A reads as unchanged.
+  function baselineKey(el, modal) {
+    return isNamedRadio(el) ? radioGroup(el, modal)[0] || el : el;
   }
 
   function readValue(el, modal) {
     if (el.type === "checkbox") return el.checked;
     if (el.type === "radio") {
       if (!isNamedRadio(el)) return el.checked ? el.value : null;
-      const scope = el.form || modal;
-      const checked = Array.prototype.find.call(
-        scope.querySelectorAll('input[type="radio"]'),
-        function (r) {
-          return r.name === el.name && r.form === el.form && r.checked;
-        },
-      );
+      const checked = radioGroup(el, modal).find(function (r) {
+        return r.checked;
+      });
       return checked ? checked.value : null;
     }
     if (el instanceof HTMLSelectElement && el.multiple) {
@@ -123,7 +134,7 @@
     const modal = trackingModal(el);
     if (!modal) return;
     const baseline = guardState(modal).baseline;
-    const key = baselineKey(el);
+    const key = baselineKey(el, modal);
     if (!baseline.has(key)) baseline.set(key, readValue(el, modal));
   }
 
@@ -135,7 +146,7 @@
     if (!state) return false;
     for (const el of state.edited) {
       if (!el.isConnected || !isComparable(el)) return true;
-      const key = baselineKey(el);
+      const key = baselineKey(el, modal);
       if (!state.baseline.has(key)) return true;
       if (readValue(el, modal) !== state.baseline.get(key)) return true;
     }
@@ -229,7 +240,6 @@
   // Bubble phase, so a control that stops its input/change from
   // propagating (e.g. an auto-saving one) never marks the modal dirty.
   function onEdit(e) {
-    if (!(e.target instanceof Element)) return;
     const modal = trackingModal(e.target);
     if (modal) guardState(modal).edited.add(e.target);
   }

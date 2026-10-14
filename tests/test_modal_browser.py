@@ -387,3 +387,25 @@ def test_non_bubbling_input_event_does_not_mark_dirty(form_modal):
     send(page, "input", bubbles=False, selector="#text")
 
     assert not prompts_on_close(page)
+
+
+TWO_FORMS = """
+{% from "jinja_ui_kit/components/modal/macro.html" import modal %}
+{% call modal({"id": "m", "autoOpen": True, "enableDirtyGuard": True}) %}
+  <form><input type="radio" name="r" id="a1" value="a" checked>
+    <input type="radio" name="r" id="b1" value="b"></form>
+  <form><input type="radio" name="r" id="a2" value="a">
+    <input type="radio" name="r" id="b2" value="b" checked></form>
+{% endcall %}
+"""
+
+
+def test_same_named_radio_groups_in_different_forms_keep_own_baselines(render_page):
+    page = render_page(TWO_FORMS)
+    record_dialogs(page)
+
+    page.check("#b1")
+    page.check("#a1")
+    page.check("#a2")
+
+    assert prompts_on_close(page)
