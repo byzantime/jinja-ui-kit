@@ -35,25 +35,31 @@ class ModalMacroTests(unittest.TestCase):
         self.assertIsNotNone(match)
         return match.group(0)
 
+    def _assert_fallback_before_dvh(self, style, prop, value):
+        fallback = style.index(f"{prop}: {value}vh")
+        dvh = style.index(f"{prop}: {value}dvh")
+        self.assertLess(fallback, dvh)
+
     def test_fullscreen_sets_fixed_height_and_max_height(self):
         html = self._render({"size": "fullscreen"})
         style = self._style(html)
 
-        self.assertIn("max-height: 98vh", style)
-        self.assertIn("height: 98vh", style)
+        self._assert_fallback_before_dvh(style, "max-height", 98)
+        self._assert_fallback_before_dvh(style, "; height", 98)
 
     def test_fullscreen_respects_explicit_max_height(self):
         html = self._render({"size": "fullscreen", "maxHeight": "80vh"})
         style = self._style(html)
 
         self.assertIn("max-height: 80vh", style)
-        self.assertIn("height: 98vh", style)
+        self.assertNotIn("max-height: 98", style)
+        self._assert_fallback_before_dvh(style, "; height", 98)
 
     def test_default_size_does_not_set_fixed_height(self):
         html = self._render({})
         style = self._style(html)
 
-        self.assertIn("max-height: 90vh", style)
+        self._assert_fallback_before_dvh(style, "max-height", 90)
         self.assertNotIn("; height:", style)
         self.assertNotRegex(style, r"^height:")
 
