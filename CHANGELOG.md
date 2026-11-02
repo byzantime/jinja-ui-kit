@@ -1,9 +1,5 @@
 # Changelog
 
-## Unreleased
-
-- Linting moved from ESLint to oxlint (`npm run lint`, `npm run lint:fix`), configured in `.oxlintrc.json`.
-
 ## 0.3.2
 
 - Fix: on mobile browsers, modals (especially `size: 'fullscreen'`) no longer grow taller than the visible screen while the address bar is showing, which pushed the header and footer off-screen. Panel heights now use `dvh`, with a `vh` fallback for browsers without `dvh` support.
