@@ -5,11 +5,11 @@
  * (htmx, innerHTML, ...) needs no per-element processing. Safe to include
  * more than once, and safe to load with `<script defer>` in <head>.
  */
-(function () {
+(function juiKit() {
   "use strict";
 
-  if (window.__juiKit) return;
-  window.__juiKit = true;
+  if (globalThis.__juiKit) return;
+  globalThis.__juiKit = true;
 
   const MODAL = "[data-jui-modal]";
 
@@ -47,7 +47,7 @@
     if (state) return state;
     // Any class change (closing, or reopening) resets the state, so a
     // reopened modal starts clean.
-    const observer = new MutationObserver(function () {
+    const observer = new MutationObserver(() => {
       clearDirty(modal);
     });
     observer.observe(modal, { attributes: true, attributeFilter: ["class"] });
@@ -66,7 +66,7 @@
   // The open, guarded modal whose edits `el` counts towards, or null if
   // `el` is a search box or sits under a `[data-jui-dirty-ignore]` in it.
   function trackingModal(el) {
-    const modal = closestMatch(el, MODAL + "[data-jui-dirty-guard]");
+    const modal = closestMatch(el, `${MODAL}[data-jui-dirty-guard]`);
     if (!modal || modal.classList.contains("hidden")) return null;
     if (el instanceof HTMLInputElement && el.type === "search") return null;
     const ignored = el.closest("[data-jui-dirty-ignore]");
@@ -92,14 +92,14 @@
   // also covers radios tied to it by a `form` attribute.
   function radioGroup(el, modal) {
     const scope = el.form ? el.form.elements : modal.querySelectorAll("input");
-    return Array.prototype.filter.call(scope, function (r) {
-      return (
+    return Array.prototype.filter.call(
+      scope,
+      (r) =>
         r instanceof HTMLInputElement &&
         r.type === "radio" &&
         r.name === el.name &&
-        r.form === el.form
-      );
-    });
+        r.form === el.form,
+    );
   }
 
   // A radio group shares one baseline, keyed by its first radio, so
@@ -112,16 +112,12 @@
     if (el.type === "checkbox") return el.checked;
     if (el.type === "radio") {
       if (!isNamedRadio(el)) return el.checked ? el.value : null;
-      const checked = radioGroup(el, modal).find(function (r) {
-        return r.checked;
-      });
+      const checked = radioGroup(el, modal).find((r) => r.checked);
       return checked ? checked.value : null;
     }
     if (el instanceof HTMLSelectElement && el.multiple) {
       return JSON.stringify(
-        Array.prototype.map.call(el.selectedOptions, function (o) {
-          return o.value;
-        }),
+        Array.prototype.map.call(el.selectedOptions, (o) => o.value),
       );
     }
     return el.value;
@@ -133,7 +129,7 @@
     if (!isComparable(el)) return;
     const modal = trackingModal(el);
     if (!modal) return;
-    const baseline = guardState(modal).baseline;
+    const { baseline } = guardState(modal);
     const key = baselineKey(el, modal);
     if (!baseline.has(key)) baseline.set(key, readValue(el, modal));
   }
@@ -155,7 +151,7 @@
 
   document.addEventListener(
     "mousedown",
-    function (e) {
+    (e) => {
       const modal = closestMatch(e.target, MODAL);
       if (modal) pressedBackdrop.set(modal, e.target === modal);
     },
@@ -164,7 +160,7 @@
 
   document.addEventListener(
     "click",
-    function (e) {
+    (e) => {
       if (!(e.target instanceof Element)) return;
 
       // Only a click whose mousedown also landed on the backdrop closes it,
@@ -190,11 +186,13 @@
     true,
   );
 
-  document.addEventListener("keydown", function (e) {
+  document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
-    document
-      .querySelectorAll(MODAL + "[data-jui-keyboard-close]:not(.hidden)")
-      .forEach(sendCloseModal);
+    for (const modal of document.querySelectorAll(
+      `${MODAL}[data-jui-keyboard-close]:not(.hidden)`,
+    )) {
+      sendCloseModal(modal);
+    }
   });
 
   // Capture phase: runs before any listener on the modal or its ancestors
@@ -206,13 +204,13 @@
   // typically a form in the modal); the innermost enclosing modal closes.
   document.addEventListener(
     "closeModal",
-    function (e) {
+    (e) => {
       const modal = closestMatch(e.target, MODAL);
       if (!modal || modal.classList.contains("hidden")) return;
       if (
-        modal.hasAttribute("data-jui-dirty-guard") &&
+        "juiDirtyGuard" in modal.dataset &&
         isDirty(modal) &&
-        !window.confirm(modal.dataset.dirtyMessage)
+        !globalThis.confirm(modal.dataset.dirtyMessage)
       ) {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -250,7 +248,7 @@
   // again before the user's next edit.
   document.addEventListener(
     "markModalClean",
-    function (e) {
+    (e) => {
       if (!isModal(e.target)) return;
       clearDirty(e.target);
       const active = document.activeElement;
@@ -267,7 +265,7 @@
   // A repeat click while the form is submitting is swallowed entirely.
   document.addEventListener(
     "click",
-    function (e) {
+    (e) => {
       const button = e.target instanceof Element && e.target.closest(GUARDED);
       if (
         button &&
@@ -283,26 +281,26 @@
 
   document.addEventListener(
     "submit",
-    function (e) {
+    (e) => {
       const form = e.target;
-      const buttons = Array.prototype.filter.call(form.elements, function (el) {
-        return el.matches(GUARDED);
-      });
-      if (!buttons.length) return;
+      const buttons = Array.prototype.filter.call(form.elements, (el) =>
+        el.matches(GUARDED),
+      );
+      if (buttons.length === 0) return;
 
       form.classList.add("is-submitting");
       // Disable after the submit has been handled, so the submitter's
       // name/value is still sent with the form.
-      setTimeout(function () {
-        buttons.forEach(function (b) {
+      setTimeout(() => {
+        for (const b of buttons) {
           b.disabled = true;
-        });
+        }
         form.addEventListener(
           "htmx:after:request",
-          function () {
-            buttons.forEach(function (b) {
+          () => {
+            for (const b of buttons) {
               b.disabled = false;
-            });
+            }
             form.classList.remove("is-submitting");
           },
           { once: true },
