@@ -15,7 +15,7 @@ run = "uv run ruff check src tests"
 [jobs.ruff-format]
 run = "uv run ruff format --check src tests"
 
-[jobs.eslint]
+[jobs.oxlint]
 run = "npm run lint"
 
 [jobs.prettier]

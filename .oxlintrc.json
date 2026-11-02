@@ -1,0 +1,97 @@
+{
+  // Validates this file against the pinned oxlint's own schema.
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  // The repo has plain JS only: no TypeScript, React or Vue plugins needed.
+  "plugins": ["eslint", "unicorn", "oxc", "import", "promise"],
+  // Strictest stable set: every non-nursery category on, then opt out below
+  // with a reason per rule.
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "pedantic": "error",
+    "perf": "error",
+    "style": "error",
+    "restriction": "error"
+  },
+  "options": {
+    // Stale `oxlint-disable` comments fail the build, as they did under ESLint.
+    "reportUnusedDisableDirectives": "error"
+  },
+  // Virtualenv contents and minified build output are not ours to lint.
+  "ignorePatterns": [".venv/**", "**/*.min.*"],
+  "rules": {
+    // Team rules.
+    // Loose equality hides coercion bugs.
+    "eqeqeq": ["error", "always"],
+    // Braces may be dropped only on single-line bodies.
+    "curly": ["error", "multi-line"],
+    // Only warnings and errors may reach the console.
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    // Keep functions small enough to follow.
+    "complexity": ["error", 10],
+    // The one sanctioned nursery rule: catches typos in globals.
+    "no-undef": "error",
+
+    // ESLint floor carried over. Function declarations are hoisted, so they
+    // may be called before their definition. The rest of the old ESLint
+    // floor (no-implicit-coercion, no-implicit-globals, no-param-reassign,
+    // no-shadow, no-var, object-shorthand, prefer-const and the recommended
+    // rules outside `correctness`) is enabled by the categories above.
+    // Floor gaps: `no-dupe-args` and `no-octal` have no oxlint rule, but the
+    // oxc parser rejects both in strict code. `strict` has no equivalent, so
+    // the browser script keeps its explicit "use strict".
+    "no-use-before-define": ["error", { "functions": false }],
+
+    // `window.__juiKit` is the double-include guard's published flag name;
+    // renaming it would break pages that load two copies of the kit.
+    "no-underscore-dangle": ["error", { "allow": ["__juiKit"] }],
+
+    // Size limits: `complexity` already bounds what matters.
+    "max-lines": "off",
+    "max-lines-per-function": "off",
+    "max-statements": "off",
+
+    // Taste rules: no bug class behind them, Prettier and review cover style.
+    "no-magic-numbers": "off",
+    "id-length": "off",
+    "one-var": "off",
+    "sort-vars": "off",
+    "sort-keys": "off",
+    "func-style": "off",
+    "no-ternary": "off",
+    "unicorn/no-null": "off",
+    "capitalized-comments": "off",
+
+    // Bans on modern syntax exist for old runtimes we do not target.
+    "oxc/no-async-await": "off",
+    "oxc/no-optional-chaining": "off",
+    "oxc/no-rest-spread-properties": "off",
+
+    // Named exports are the team default.
+    "import/no-named-export": "off"
+  },
+  "overrides": [
+    {
+      // Shipped to browsers as a classic <script> (ES2020): no modules, no Node.
+      "files": ["src/jinja_ui_kit/dist/**/*.js"],
+      "env": { "browser": true, "es2020": true },
+      "rules": {
+        // A classic script cannot be an ES module.
+        "unicorn/prefer-module": "off",
+        "import/unambiguous": "off",
+        // Native confirm is the dirty-guard UX.
+        "no-alert": "off"
+      }
+    },
+    {
+      // Tailwind 3 loads a CommonJS config under Node.
+      "files": ["tailwind.config.js"],
+      "env": { "node": true, "commonjs": true },
+      "rules": {
+        "unicorn/prefer-module": "off",
+        "import/no-commonjs": "off",
+        "import/unambiguous": "off"
+      }
+    }
+  ]
+}
