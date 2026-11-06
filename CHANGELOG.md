@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Textareas no longer default to a monospace font; they inherit the body font like inputs. To keep monospace, add `font-mono` via `params.classes` or a shadowed `theme.html`.
+
 ## 0.3.2
 
 - Fix: on mobile browsers, modals (especially `size: 'fullscreen'`) no longer grow taller than the visible screen while the address bar is showing, which pushed the header and footer off-screen. Panel heights now use `dvh`, with a `vh` fallback for browsers without `dvh` support.

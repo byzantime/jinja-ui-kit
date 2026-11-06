@@ -89,7 +89,7 @@ class ThemeOverrideTests(unittest.TestCase):
             "{{ textarea({'name': 'notes', 'label': {'text': 'Notes'}}) }}",
         )
         self.assertIn("textarea-custom", html)
-        self.assertNotIn("font-mono", html)
+        self.assertNotIn("resize-y", html)
 
     def test_shadowed_theme_replaces_input_defaults(self):
         html = render(
