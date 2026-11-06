@@ -173,6 +173,7 @@ class FormFieldDefaultClassesTests(unittest.TestCase):
         classes = self._classes(html, "textarea")
 
         self.assertIn("border-neutral-300", classes)
+        self.assertIn("resize-y", classes)
 
 
 if __name__ == "__main__":

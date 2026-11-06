@@ -1,3 +1,3 @@
 """Jinja UI Kit - Reusable Jinja2 macros for web applications."""
 
-__version__ = "0.3.2"
+__version__ = "0.4.0"
