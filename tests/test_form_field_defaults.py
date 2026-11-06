@@ -35,8 +35,6 @@ class FormFieldDefaultClassesTests(unittest.TestCase):
         classes = self._classes(html, "input")
 
         self.assertIn("border-neutral-300", classes)
-        self.assertIn("resize-y", classes)
-        self.assertNotIn("font-mono", classes)
         self.assertIn("rounded-md", classes)
 
     def test_input_appends_custom_classes(self):
@@ -175,6 +173,8 @@ class FormFieldDefaultClassesTests(unittest.TestCase):
         classes = self._classes(html, "textarea")
 
         self.assertIn("border-neutral-300", classes)
+        self.assertIn("resize-y", classes)
+        self.assertNotIn("font-mono", classes)
 
 
 if __name__ == "__main__":
