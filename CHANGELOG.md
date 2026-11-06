@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Textareas no longer default to a monospace font; they inherit the body font like inputs. To keep monospace, add `font-mono` via `params.classes` or a shadowed `theme.html`.
+- Textareas no longer default to a monospace font; they inherit the body font like inputs. To keep monospace, add `font-mono` via `params.classes` or a shadowed `theme.html` in a Tailwind build; the pre-compiled `jinja-ui-kit.min.css` no longer includes `.font-mono`.
 
 ## 0.3.2
 
